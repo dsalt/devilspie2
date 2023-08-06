@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: devilspie2 0.44\n"
+"Project-Id-Version: devilspie2 0.45\n"
 "Report-Msgid-Bugs-To: devspam@moreofthesa.me.uk\n"
-"POT-Creation-Date: 2021-09-06 17:43+0100\n"
+"POT-Creation-Date: 2023-08-06 21:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -97,9 +97,33 @@ msgstr ""
 msgid "Couldn't create directory monitor!"
 msgstr ""
 
-#: script_functions.c:743 script_functions.c:777
+#: script_functions.c:662
+msgid "'tostring' must return a string to 'print'"
+msgstr ""
+
+#: script_functions.c:876 script_functions.c:907
 #, c-format
 msgid "Workspace number %d does not exist!"
+msgstr ""
+
+#: script_functions.c:2150
+#, c-format
+msgid "get_process_name: Failed to open \"%s\" (%d)."
+msgstr ""
+
+#: script_functions.c:2156
+#, c-format
+msgid "get_process_name: Failed to read from \"%s\"."
+msgstr ""
+
+#: script_functions.c:2177
+#, c-format
+msgid "get_process_name: Failed to run command \"%s\"."
+msgstr ""
+
+#: script_functions.c:2182
+#, c-format
+msgid "get_process_name: Failed to read output from command \"%s\"."
 msgstr ""
 
 #: xutils.c:195 xutils.c:213

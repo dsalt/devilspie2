@@ -659,7 +659,7 @@ int c_debug_print(lua_State *lua)
 
 		const char *s = lua_tostring(lua, -1);  /* get result */
 		if (s == NULL)
-			return luaL_error(lua, "'tostring' must return a string to 'print'");
+			return luaL_error(lua, _("'tostring' must return a string to 'print'"));
 		if (i > 1) {
 			if (devilspie2_debug) fputs("\t", stdout);
 		}
@@ -2147,13 +2147,13 @@ static gchar *c_get_process_name_INT_proc(lua_State *lua, pid_t pid)
 	cmdfp = fopen(cmd, "r");
 	if (cmdfp == NULL) {
 		if (errno != ENOENT && errno != EACCES) {
-			luaL_error(lua, "get_process_name: Failed to open \"%s\" (%d).", cmd, errno);
+			luaL_error(lua, _("get_process_name: Failed to open \"%s\" (%d)."), cmd, errno);
 		}
 		return NULL;
 	}
 
 	if (fgets(cmdname, sizeof(cmdname), cmdfp) == NULL) {
-		luaL_error(lua, "get_process_name: Failed to read from \"%s\".", cmd);
+		luaL_error(lua, _("get_process_name: Failed to read from \"%s\"."), cmd);
 		fclose(cmdfp);
 		return NULL;
 	}
@@ -2174,12 +2174,12 @@ static gchar *c_get_process_name_INT_ps(lua_State *lua, pid_t pid)
 	snprintf(cmd, sizeof(cmd), "ps o comm c %lu | tail -n 1", (unsigned long)pid);
 	cmdfp = popen(cmd, "r");
 	if (cmdfp == NULL) {
-		luaL_error(lua, "get_process_name: Failed to run command \"%s\".", cmd);
+		luaL_error(lua, _("get_process_name: Failed to run command \"%s\"."), cmd);
 		return 0;
 	}
 
 	if (fgets(cmdname, sizeof(cmdname), cmdfp) == NULL) {
-		luaL_error(lua, "get_process_name: Failed to read output from command \"%s\".", cmd);
+		luaL_error(lua, _("get_process_name: Failed to read output from command \"%s\"."), cmd);
 		pclose(cmdfp);
 		return 0;
 	}
