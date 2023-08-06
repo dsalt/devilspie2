@@ -116,6 +116,7 @@ static guint32 current_time(void)
 
 /***********************************
  * Error-checking functions & macros
+ * NOTE: luaL_error() does not return
  */
 
 static const char *const dp2_type_to_string[] = {
@@ -127,36 +128,34 @@ static const char *const dp2_type_to_string[] = {
 #define DP2_C_FUNC_TO_LUA (__func__ + 2)
 
 /* This macro inserts the function name after the format parameter.
+ * Use as "return dp2_lua_error(…)" as if returning int.
  */
 #define dp2_lua_error(lua, errmsg, ...) \
 	luaL_error(lua, errmsg, DP2_C_FUNC_TO_LUA, ##__VA_ARGS__)
 
 /*
- * Check that types match. Reports the first error encountered.
- * Returns 0 if all match.
+ * Check that types match.
+ * Returns if no errors are found.
+ * Otherwise, reports the first error encountered.
  */
-static int dp2_check_types(lua_State *lua, const char *func, size_t count, int check)
+static void dp2_check_types(lua_State *lua, const char *func, size_t count, int check)
 {
 	for (size_t i = 1; i <= count; ++i) {
 		int type = lua_type(lua, i);
 		if (type != check) {
-			luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE, func, i, _(dp2_type_to_string[check])); \
-			return 1;
+			luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE, func, i, _(dp2_type_to_string[check]));
+			return; // never executed
 		}
 	}
-
-	return 0;
 }
 
-static int dp2_check_type(lua_State *lua, const char *func, size_t argi, int check)
+static void dp2_check_type(lua_State *lua, const char *func, size_t argi, int check)
 {
 	int type = lua_type(lua, argi);
 	if (type != check) {
-		luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE, func, argi, _(dp2_type_to_string[check])); \
-		return 1;
+		luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE, func, argi, _(dp2_type_to_string[check]));
+		return; // never executed
 	}
-
-	return 0;
 }
 
 /*
@@ -167,8 +166,7 @@ static int dp2_check_type(lua_State *lua, const char *func, size_t argi, int che
 #define DP2_REQUIRE_ARG_COUNT(count) \
 	do { \
 		if (lua_gettop(lua) != count) { \
-			dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT, count); \
-			return 0; \
+			return dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT, count); \
 		} \
 	} while (0)
 
@@ -177,8 +175,7 @@ static int dp2_check_type(lua_State *lua, const char *func, size_t argi, int che
 	do { \
 		var = lua_gettop(lua); \
 		if (var < count_min || var > count_max) { \
-			dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT_RANGE, count_min, count_max); \
-			return 0; \
+			return dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT_RANGE, count_min, count_max); \
 		} \
 	} while (0)
 
@@ -191,8 +188,7 @@ static int dp2_check_type(lua_State *lua, const char *func, size_t argi, int che
 		for (i__ = 0; i__ < sizeof(args__) / sizeof(args__[0]); ++i__) \
 			if (var == args__[i__]) break; \
 		if (i__ >= sizeof(args__) / sizeof(args__[0])) { \
-			dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT_MULTI, #__VA_ARGS__); \
-			return 0; \
+			return dp2_lua_error(lua, DP2ERROR_WRONG_ARG_COUNT_MULTI, #__VA_ARGS__); \
 		} \
 	} while (0)
 
@@ -207,14 +203,10 @@ static int dp2_check_type(lua_State *lua, const char *func, size_t argi, int che
  * Checks all arguments
  */
 #define DP2_REQUIRE_ARGS_TYPE(argc, check) \
-	do { \
-		if (dp2_check_types(lua, DP2_C_FUNC_TO_LUA, argc, LUA_T##check)) return 0; \
-	} while (0)
+	dp2_check_types(lua, DP2_C_FUNC_TO_LUA, argc, LUA_T##check)
 /* Checks one argument */
 #define DP2_REQUIRE_ARG_TYPE(argi, check) \
-	do { \
-		if (dp2_check_type(lua, DP2_C_FUNC_TO_LUA, argi, LUA_T##check)) return 0; \
-	} while (0)
+	dp2_check_type(lua, DP2_C_FUNC_TO_LUA, argi, LUA_T##check)
 
 /***************
  * Lua functions
@@ -1473,7 +1465,7 @@ int c_set_window_property(lua_State *lua)
 		break;
 
 	default:
-		luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE_MULTI, DP2_C_FUNC_TO_LUA, 2);
+		return luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE_MULTI, DP2_C_FUNC_TO_LUA, 2);
 	}
 
 	return 0;
@@ -1740,8 +1732,7 @@ int c_center(lua_State *lua)
 			}
 			break;
 		default:
-			luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE_NUM_STR, DP2_C_FUNC_TO_LUA, i);
-			return 0;
+			return luaL_error(lua, DP2ERROR_WRONG_ARG_TYPE_NUM_STR, DP2_C_FUNC_TO_LUA, i);
 		}
 	}
 
@@ -2154,8 +2145,7 @@ static gchar *c_get_process_name_INT_proc(lua_State *lua, pid_t pid)
 
 	if (fgets(cmdname, sizeof(cmdname), cmdfp) == NULL) {
 		fclose(cmdfp);
-		luaL_error(lua, _("get_process_name: Failed to read from \"%s\"."), cmd);
-		return NULL;
+		return luaL_error(lua, _("get_process_name: Failed to read from \"%s\"."), cmd), NULL;
 	}
 
 	fclose(cmdfp);
@@ -2174,14 +2164,12 @@ static gchar *c_get_process_name_INT_ps(lua_State *lua, pid_t pid)
 	snprintf(cmd, sizeof(cmd), "ps o comm c %lu | tail -n 1", (unsigned long)pid);
 	cmdfp = popen(cmd, "r");
 	if (cmdfp == NULL) {
-		luaL_error(lua, _("get_process_name: Failed to run command \"%s\"."), cmd);
-		return 0;
+		return luaL_error(lua, _("get_process_name: Failed to run command \"%s\"."), cmd), NULL;
 	}
 
 	if (fgets(cmdname, sizeof(cmdname), cmdfp) == NULL) {
 		pclose(cmdfp);
-		luaL_error(lua, _("get_process_name: Failed to read output from command \"%s\"."), cmd);
-		return 0;
+		return luaL_error(lua, _("get_process_name: Failed to read output from command \"%s\"."), cmd), NULL;
 	}
 
 	pclose(cmdfp);
