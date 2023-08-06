@@ -1,7 +1,6 @@
-
 /**
  *	This file is part of devilspie2
- *	Copyright (C) 2012-2017 Andreas Rönnquist
+ *	Copyright (C) 2023 Darren Salt
  *
  *	devilspie2 is free software: you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License as published
@@ -23,33 +22,27 @@
 /**
  *
  */
-extern gchar *no_indata_expected_error;
-extern gchar *one_indata_expected_error;
-extern gchar *two_indata_expected_error;
-extern gchar *four_indata_expected_error;
+#define DP2ERROR_WRONG_ARG_COUNT                _("%s: wrong number of arguments (expected %d)")
+#define DP2ERROR_WRONG_ARG_COUNT_RANGE          _("%s: wrong number of arguments (expected %d-%d)")
+#define DP2ERROR_WRONG_ARG_COUNT_MULTI          _("%s: wrong number of arguments (expected %s)")
+#define DP2ERROR_WRONG_ARG_TYPE                 _("%s: argument %d: wrong type (expected %s)")
+#define DP2ERROR_WRONG_ARG_TYPE_NUM_STR         _("%s: argument %d: wrong type (expected number or string)")
+#define DP2ERROR_WRONG_ARG_TYPE_MULTI           _("%s: argument %d: wrong type (expected boolean, number or string)")
 
-extern gchar *one_or_two_indata_expected_error;
-extern gchar *two_or_three_indata_expected_error;
+#define DP2ERROR_INTEGER_NOT_GT_0               _("%s: argument %d is not a positive integer")
+#define DP2ERROR_MISSING_CURRENT_VIEWPORT	_("%s: could not find current viewport")
+#define DP2ERROR_FAILED_SET_VIEWPORT            _("%s: setting viewport failed")
 
-extern gchar *number_expected_as_indata_error;
-extern gchar *boolean_expected_as_indata_error;
+#define DP2ERROR_FAILED                         _("%s: failed!")
 
-extern gchar *string_expected_as_indata_error;
+#define DP2_LUA_BOOLEAN_  N_("boolean")
+#define DP2_LUA_NUMBER_   N_("number")
+#define DP2_LUA_STRING_   N_("string")
+#define DP2_LUA_FUNCTION_ N_("function")
 
-extern gchar *number_or_string_expected_as_indata_error;
-
-extern gchar *integer_greater_than_zero_expected_error;
-extern gchar *could_not_find_current_viewport_error;
-
-extern gchar *setting_viewport_failed_error;
-
-extern gchar *failed_string;
-
-/**
- *
- */
-int init_script_error_messages();
-void done_script_error_messages();
-
+#define DP2_LUA_BOOLEAN   _(DP2_LUA_BOOLEAN_)
+#define DP2_LUA_NUMBER    _(DP2_LUA_NUMBER_)
+#define DP2_LUA_STRING    _(DP2_LUA_STRING_)
+#define DP2_LUA_FUNCTION  _(DP2_LUA_FUNCTION_)
 
 #endif /*__HEADER_ERROR_STRINGS_*/

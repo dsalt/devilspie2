@@ -181,8 +181,6 @@ static void signal_handler(int sig)
 {
 	printf("\n%s %d (%s)\n", _("Received signal:"), sig, strsignal(sig));
 
-	done_script_error_messages();
-
 	if (sig == SIGINT) {
 		exit(EXIT_FAILURE);
 	}
@@ -401,11 +399,6 @@ int main(int argc, char *argv[])
 	}
 
 #endif
-
-	if (init_script_error_messages()!=0) {
-		printf("%s\n", _("Couldn't init script error messages!"));
-		exit(EXIT_FAILURE);
-	}
 
 	// set the current window to NULL, we don't need to be able to modify
 	// the windows when reading the config
