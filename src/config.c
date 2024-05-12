@@ -213,6 +213,9 @@ int load_config(gchar *filename)
 		event_lists[W_FOCUS] = get_table_of_strings(config_lua_state,
 		                         script_folder,
 		                         "scripts_window_focus");
+		event_lists[W_TITLE_CHANGE] = get_table_of_strings(config_lua_state,
+		                         script_folder,
+		                         "scripts_window_title_change");
 		event_lists[W_BLUR]  = get_table_of_strings(config_lua_state,
 		                         script_folder,
 		                         "scripts_window_blur");

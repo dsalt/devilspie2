@@ -30,6 +30,7 @@ typedef enum {
 	W_OPEN,
 	W_CLOSE,
 	W_FOCUS,
+	W_TITLE_CHANGE,
 	W_BLUR,
 	W_NUM_EVENTS /* keep this at the end */
 } win_event_type;

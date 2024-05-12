@@ -68,7 +68,13 @@ GFileMonitor *mon = NULL;
 gchar *config_filename = NULL;
 
 /**
- *
+ * load_list_of_scripts:
+ * @screen: pointer to WnckScreen.
+ * @window: pointer to WnckWindow.
+ * @file_list: list of hook files.
+ * 
+ * Runs list of Lua hooks
+ * Returns: null 
  */
 static void load_list_of_scripts(WnckScreen *screen G_GNUC_UNUSED, WnckWindow *window,
                                  GSList *file_list)
@@ -102,7 +108,13 @@ static void load_list_of_scripts(WnckScreen *screen G_GNUC_UNUSED, WnckWindow *w
 
 
 /**
- *
+ * window_opened_cb:
+ * @screen: pointer to WnckScreen.
+ * @window: pointer to WnckWindow.
+ * 
+ * `window-opened` event callback function. 
+ * 
+ * Returns: null 
  */
 static void window_opened_cb(WnckScreen *screen, WnckWindow *window)
 {
@@ -111,16 +123,40 @@ static void window_opened_cb(WnckScreen *screen, WnckWindow *window)
 
 
 /**
- *
+ * window_closed_cb:
+ * @screen: pointer to WnckScreen.
+ * @window: pointer to WnckWindow.
+ * 
+ * `window-closed` event callback function. 
+ * 
+ * Returns: null 
  */
 static void window_closed_cb(WnckScreen *screen, WnckWindow *window)
 {
 	load_list_of_scripts(screen, window, event_lists[W_CLOSE]);
 }
 
+/**
+ * active_window_name_changed_cb:
+ * @window: pointer to WnckWindow.
+ * 
+ * `name-changed` event callback function. Connected in window_changed_cb()
+ * 
+ * Returns: null 
+ */
+static void active_window_name_changed_cb(WnckWindow *window)
+{
+	load_list_of_scripts(NULL, window, event_lists[W_TITLE_CHANGE]);
+}
 
 /**
- *
+ * window_changed_cb:
+ * @screen: pointer to WnckScreen.
+ * @window: pointer to WnckWindow.
+ * 
+ * `active-window-changed` event callback function. 
+ * 
+ * Returns: null 
  */
 static void window_changed_cb(WnckScreen *screen, WnckWindow *window)
 {
@@ -129,11 +165,15 @@ static void window_changed_cb(WnckScreen *screen, WnckWindow *window)
 	load_list_of_scripts(screen, window, event_lists[W_BLUR]);
 	cur = wnck_screen_get_active_window(screen);
 	load_list_of_scripts(screen, cur, event_lists[W_FOCUS]);
+	if (cur && g_signal_handler_find(cur,G_SIGNAL_MATCH_FUNC, 0, 0, NULL, (GFunc) active_window_name_changed_cb, NULL) == 0){
+	    g_signal_connect(cur, "name-changed", (GCallback)active_window_name_changed_cb, NULL);
+	}
 }
 
 
 /**
- *
+ * init_screens:
+ * Set up signal handlers for screens.
  */
 void init_screens()
 {
@@ -147,6 +187,7 @@ void init_screens()
 #endif
 
 	for (i=0; i<num_screens; i++) {
+		// TODO fix warning: ‘wnck_screen_get’ is deprecated: Use 'wnck_handle_get_screen' instead
 		WnckScreen *screen = wnck_screen_get(i);
 
 		g_signal_connect(screen, "window-opened",
