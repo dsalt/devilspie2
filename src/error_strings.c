@@ -24,21 +24,20 @@
 
 #include "error_strings.h"
 
+const int max_indata_expected;
+gchar *num_indata_expected_errors[] = {NULL, NULL, NULL, NULL, NULL};
 
-gchar *no_indata_expected_error = NULL;
-gchar *one_indata_expected_error = NULL;
-gchar *two_indata_expected_error = NULL;
-gchar *four_indata_expected_error = NULL;
+gchar *n_or_m_indata_expected_error = NULL;
+gchar *n_to_m_indata_expected_error = NULL;
 
-gchar *one_or_two_indata_expected_error = NULL;
-gchar *two_or_three_indata_expected_error = NULL;
+gchar *at_least_four_indata_expected_error = NULL;
 
 gchar *number_expected_as_indata_error = NULL;
 gchar *boolean_expected_as_indata_error = NULL;
-
 gchar *string_expected_as_indata_error = NULL;
 
 gchar *number_or_string_expected_as_indata_error = NULL;
+gchar *number_or_string_or_boolean_expected_as_indata_error = NULL;
 
 gchar *integer_greater_than_zero_expected_error = NULL;
 gchar *could_not_find_current_viewport_error = NULL;
@@ -54,26 +53,30 @@ gchar *failed_string = NULL;
 #define INIT_ERRMSG(errvar, errtxt) \
 	{ \
 		errvar = g_strdup(errtxt); \
-		if (!no_indata_expected_error) { \
-			printf("%s\n", ALLOCATE_ERROR_STRING); \
+		if (!errvar) { \
+			printf("%s: \"%s\"\n", ALLOCATE_ERROR_STRING, errtxt); \
 			return -1; \
 		} \
 	}
 int init_script_error_messages()
 {
-	INIT_ERRMSG(no_indata_expected_error,                   _("No indata expected"));
-	INIT_ERRMSG(one_indata_expected_error,                  _("One indata expected"));
-	INIT_ERRMSG(two_indata_expected_error,                  _("Two indata expected"));
-	INIT_ERRMSG(four_indata_expected_error,                 _("Four indata expected"));
+	INIT_ERRMSG(num_indata_expected_errors[0],              _("No indata expected"));
+	INIT_ERRMSG(num_indata_expected_errors[1],              _("One indata expected"));
+	INIT_ERRMSG(num_indata_expected_errors[2],              _("Two indata expected"));
+	INIT_ERRMSG(num_indata_expected_errors[3],              _("Three indata expected"));
+	INIT_ERRMSG(num_indata_expected_errors[4],              _("Four indata expected"));
 
-	INIT_ERRMSG(one_or_two_indata_expected_error,           _("One or two indata expected"));
-	INIT_ERRMSG(two_or_three_indata_expected_error,         _("Two or three indata expected"));
+	INIT_ERRMSG(n_or_m_indata_expected_error,               _("%d or %d indata expected"));
+	INIT_ERRMSG(n_to_m_indata_expected_error,               _("%d to %d indata expected"));
+
+	INIT_ERRMSG(at_least_four_indata_expected_error,        _("At least four indata expected"));
 
 	INIT_ERRMSG(number_expected_as_indata_error,            _("Number expected as indata"));
 	INIT_ERRMSG(boolean_expected_as_indata_error,           _("Boolean expected as indata"));
 	INIT_ERRMSG(string_expected_as_indata_error,            _("String expected as indata"));
 
 	INIT_ERRMSG(number_or_string_expected_as_indata_error,  _("Number or string expected as indata"));
+	INIT_ERRMSG(number_or_string_or_boolean_expected_as_indata_error,  _("Number or string or boolean expected as indata"));
 
 	INIT_ERRMSG(integer_greater_than_zero_expected_error,   _("Integer greater than zero expected"));
 	INIT_ERRMSG(could_not_find_current_viewport_error,      _("Could not find current viewport"));
@@ -90,19 +93,21 @@ int init_script_error_messages()
  */
 void done_script_error_messages()
 {
-	g_free(no_indata_expected_error);
-	g_free(one_indata_expected_error);
-	g_free(two_indata_expected_error);
-	g_free(four_indata_expected_error);
+	for (int i = 0; i <= max_indata_expected; i++) {
+		g_free(num_indata_expected_errors[i]);
+	}
 
-	g_free(one_or_two_indata_expected_error);
-	g_free(two_or_three_indata_expected_error);
+	g_free(n_or_m_indata_expected_error);
+	g_free(n_to_m_indata_expected_error);
+
+	g_free(at_least_four_indata_expected_error);
 
 	g_free(number_expected_as_indata_error);
 	g_free(boolean_expected_as_indata_error);
 	g_free(string_expected_as_indata_error);
 
 	g_free(number_or_string_expected_as_indata_error);
+	g_free(number_or_string_or_boolean_expected_as_indata_error);
 
 	g_free(integer_greater_than_zero_expected_error);
 	g_free(could_not_find_current_viewport_error);
