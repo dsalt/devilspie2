@@ -23,20 +23,20 @@
 /**
  *
  */
-extern gchar *no_indata_expected_error;
-extern gchar *one_indata_expected_error;
-extern gchar *two_indata_expected_error;
-extern gchar *four_indata_expected_error;
+extern const int max_indata_expected;
+extern gchar *num_indata_expected_errors[];
 
-extern gchar *one_or_two_indata_expected_error;
-extern gchar *two_or_three_indata_expected_error;
+extern gchar *n_or_m_indata_expected_error;
+extern gchar *n_to_m_indata_expected_error;
+
+extern gchar *at_least_four_indata_expected_error;
 
 extern gchar *number_expected_as_indata_error;
 extern gchar *boolean_expected_as_indata_error;
-
 extern gchar *string_expected_as_indata_error;
 
 extern gchar *number_or_string_expected_as_indata_error;
+extern gchar *number_or_string_or_boolean_expected_as_indata_error;
 
 extern gchar *integer_greater_than_zero_expected_error;
 extern gchar *could_not_find_current_viewport_error;
