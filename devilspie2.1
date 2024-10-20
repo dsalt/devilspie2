@@ -23,8 +23,20 @@ Displays the version of Devilspie2.
 Sets the folder where the Lua scripts are loaded from.
 .TP
 \fB\-d\fR, \fB\-\-debug
-Shows debug information from the Lua scripts. If debug_print is used in the Lua
-scripts, that output will only be printed to stdout if this option is used.
+Shows debug information from the Lua scripts. If \fIdebug_print\fR is used
+in the Lua scripts, it will output to stdout.
+.TP
+\fB\-D\fR, \fB\-\-debug\-fifo
+Copy stdout & send debug info to a FIFO. If \fIdebug_print\fR is used in
+the Lua scripts, it will output to the FIFO.
+
+Nothing is output to the FIFO if nothing is reading it.
+You can read it using a program such as \fBcat\fR.
+
+\fB\-\-debug\fR and \fB\-\-debug\-fifo\fR may be used together.
+.TP
+\fB\-P\fR, \fB\-\-print\-fifo
+Print the FIFO's file name then exit.
 .TP
 \fB\-e\fR, \fB\-\-emulate
 Emulation mode. This prevents windows from being affected by the scripts,
@@ -40,6 +52,17 @@ Show the version of Lua in use.
 See
 .I /usr/share/doc/devilspie2/README.md
 for a detailed description of the commands recognised in Lua scripts.
+
+.SH Files
+.TP
+.B $XDG_RUNTIME_DIR/devilspie2\-$DISPLAY
+.TP
+.B $TMPDIR/devilspie2\-$DISPLAY
+.TP
+.B /tmp/devilspie2\-$DISPLAY
+These are the possible locations of the FIFO which is created if
+\fB\-\-debug\-fifo\fR is used. The first one for which the referenced
+environment variables are set is used.
 
 .SH Author
 .P

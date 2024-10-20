@@ -37,6 +37,7 @@
 
 #include "script.h"
 #include "script_functions.h"
+#include "logger.h"
 
 #include "error_strings.h"
 
@@ -53,7 +54,11 @@
 GMainLoop *loop = NULL;
 
 static gboolean debug = FALSE;
+static gboolean logtofifo = FALSE;
 static gboolean emulate = FALSE;
+
+static gboolean show_fifo = FALSE;
+
 static gboolean show_version = FALSE;
 
 // libwnck Version Information is only availible if you have
@@ -220,7 +225,7 @@ static void signal_handler(int sig)
 /**
  *
  */
-void print_list(GSList *list)
+static void print_list(GSList *list)
 {
 	GSList *temp_list;
 	if (list != NULL) {
@@ -231,7 +236,7 @@ void print_list(GSList *list)
 
 			if (file_name) {
 				if (g_str_has_suffix((gchar*)file_name, ".lua")) {
-					printf("%s\n", (gchar*)file_name);
+					logger_printf("%s\n", (gchar*)file_name);
 				}
 			}
 			temp_list = temp_list->next;
@@ -243,30 +248,26 @@ void print_list(GSList *list)
 /**
  *
  */
-void print_script_lists()
+static void print_script_lists()
 {
 	gboolean have_any_files = FALSE;
 	win_event_type i;
 
-	if (debug)
-		printf("------------\n");
+	logger_print("------------\n");
 
 	for (i = 0; i < W_NUM_EVENTS; i++) {
 		if (event_lists[i])
 			have_any_files = TRUE;
 		// If we are running debug mode - print the list of files:
-		if (debug) {
-			printf(_("List of Lua files handling \"%s\" events in folder:"),
-				   event_names[i]);
-			printf("\n");
-			if (event_lists[i]) {
-				print_list(event_lists[i]);
-			}
+		logger_printf(_("List of Lua files handling \"%s\" events in folder:\n"),
+		              event_names[i]);
+		if (event_lists[i]) {
+			print_list(event_lists[i]);
 		}
 	}
 
 	if (!have_any_files) {
-		printf("%s\n\n", _("No script files found in the script folder - exiting."));
+		logger_err_printf("%s\n\n", _("No script files found in the script folder - exiting."));
 		exit(EXIT_SUCCESS);
 	}
 }
@@ -292,13 +293,11 @@ void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
 		set_current_window(NULL);
 		load_config(our_filename);
 
-		if (debug)
-			printf("Files in folder updated!\n - new lists:\n\n");
+		logger_print("Files in folder updated!\n - new lists:\n\n");
 
 		print_script_lists();
 
-		if (debug)
-			printf("-----------\n");
+		logger_print("-----------\n");
 	}
 
 	// Also monitor if our devilspie2.lua file is changed - since it handles
@@ -316,8 +315,7 @@ void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
 
 				print_script_lists();
 
-				if (debug)
-					printf("----------");
+				logger_print("----------\n");
 			}
 		}
 	}
@@ -332,6 +330,12 @@ int main(int argc, char *argv[])
 	static const GOptionEntry options[]= {
 		{ "debug",        'd', 0, G_OPTION_ARG_NONE,   &debug,
 		  N_("Print debug info to stdout"), NULL
+		},
+		{ "debug-fifo",   'D', 0, G_OPTION_ARG_NONE,   &logtofifo,
+		  N_("Print debug info & copy stdout to a FIFO"), NULL
+		},
+		{ "print-fifo",   'P', 0, G_OPTION_ARG_NONE,   &show_fifo,
+		  N_("Print the debug FIFO's file name then quit"), NULL
 		},
 		{ "emulate",      'e', 0, G_OPTION_ARG_NONE,   &emulate,
 		  N_("Don't apply any rules, only emulate execution"), NULL
@@ -399,6 +403,11 @@ int main(int argc, char *argv[])
 		}
 
 		script_folder = temp_folder;
+	}
+
+	if (show_fifo) {
+		puts(logger_get_fifo_name());
+		exit(EXIT_SUCCESS);
 	}
 
 	gboolean shown = FALSE;
@@ -492,6 +501,8 @@ int main(int argc, char *argv[])
 	                 (gpointer)(config_filename));
 
 	global_lua_state = init_script();
+	if (logtofifo)
+		logger_create(global_lua_state);
 	print_script_lists();
 
 	if (debug) printf("------------\n");
