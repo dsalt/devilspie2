@@ -20,11 +20,25 @@ Unfortunately the rules of the original Devil's Pie are not supported.
 |:--|:--|
 | `-h`, `--help`         | Show help options |
 | `-d`, `--debug`        | Print debug information to stdout |
+| `-D`, `--debug-fifo`   | Print debug info & copy stdout to a FIFO |
+| `-P`, `--print-fifo`   | Print the debug FIFO's file name then quit |
 | `-e`, `--emulate`      | Don't apply any rules, only emulate execution |
 | `-f`, `--folder`       | Search for scripts in this folder |
 | `-v`, `--version`      | Print program version then quit |
 | `-w`, `--wnck-version` | Show libwnck version then quit |
 | `-l`, `--lua-version`  | Show Lua version then quit |
+
+If you run `devilspie2 --debug-fifo`, you can connect to its FIFO at any
+time and see the same text as for `devilspie --debug`. The reason for this
+is to allow `devilspie2` to be dæmonised while still having access to
+debugging output etc. at need.
+
+A useful way of doing this is to run, in a terminal, this command:
+```sh
+cat "$(devilspie2 -P)"
+```
+(No text backlog will be shown; if there's nothing reading the FIFO, nothing
+is written to it.)
 
 ## Configuration
 

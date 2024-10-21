@@ -28,7 +28,8 @@ in the Lua scripts, it will output to stdout.
 .TP
 \fB\-D\fR, \fB\-\-debug\-fifo
 Copy stdout & send debug info to a FIFO. If \fIdebug_print\fR is used in
-the Lua scripts, it will output to the FIFO.
+the Lua scripts, it will output to the FIFO. This is intended for running
+dæmonised while allowing access to debug text etc. at need.
 
 Nothing is output to the FIFO if nothing is reading it.
 You can read it using a program such as \fBcat\fR.
@@ -36,7 +37,10 @@ You can read it using a program such as \fBcat\fR.
 \fB\-\-debug\fR and \fB\-\-debug\-fifo\fR may be used together.
 .TP
 \fB\-P\fR, \fB\-\-print\-fifo
-Print the FIFO's file name then exit.
+Print the FIFO's file name then exit. This may be used as follows:
+.EX
+cat "$(devilspie2 \-\-print\-fifo)"
+.EE
 .TP
 \fB\-e\fR, \fB\-\-emulate
 Emulation mode. This prevents windows from being affected by the scripts,
