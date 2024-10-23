@@ -32,6 +32,7 @@
 
 #include <locale.h>
 
+#include "compat.h"
 #include "intl.h"
 #include "script.h"
 #include "logger.h"
@@ -47,8 +48,6 @@
 /**
  *
  */
-gboolean script_loaded = FALSE;
-
 gboolean devilspie2_debug = FALSE;
 gboolean devilspie2_emulate = FALSE;
 
@@ -211,34 +210,51 @@ register_cfunctions(lua_State *lua)
 /**
  *
  */
-int
-load_script(lua_State *lua,char *filename)
+static ATTR_MALLOC gchar *error_add_backtrace(lua_State *lua, const char *msg)
 {
-	if (lua) {
-		int result = luaL_loadfile(lua, filename);
+	int r, level = 0, lines = 0;
+	lua_Debug state;
+	const gchar *header = _("Backtrace:\n");
+	gchar *backtrace = (gchar*)msg;
 
-		if (!result) {
-			script_loaded = TRUE;
-		} else {
-
-			// We got an error, print it
-			logger_err_printf("%s\n", lua_tostring(lua, -1));
-
-			lua_pop(lua, 1);
-
-			return -1;
+	while ((r = lua_getstack(lua, level, &state)) != 0)
+	{
+		lua_getinfo(lua, "Sln", &state);
+		// only report script locations;
+		// C code has name="[C]" & currentline=-1
+		if (state.currentline > 0) {
+			char *traced = state.name
+			     ? g_strdup_printf("%s\n%s  %s:%d [%-6s] %s", backtrace, header, state.short_src, state.currentline, state.namewhat, state.name)
+			     : g_strdup_printf("%s\n%s  %s:%d [%-6s]", backtrace, header, state.short_src, state.currentline, state.what);
+			header = "";
+			if (backtrace != msg)
+				g_free(backtrace);
+			backtrace = traced;
+			++lines;
 		}
-	} else {
-		return -1;
+		++level;
 	}
 
-	return 0;
+	if (lines > 1)
+		return backtrace;
+
+	if (backtrace != msg)
+		g_free(backtrace);
+	return g_strdup(msg);
 }
 
+static ATTR_MALLOC gchar *error_add_location(lua_State* lua, const char *msg)
+{
+	lua_Debug state;
 
-/**
- *
- */
+	int r = lua_getstack(lua, 0, &state);
+	if (r == 0)
+		return g_strdup(msg);
+	lua_getinfo(lua, "Sln", &state);
+	// the error handler will add a backtrace, so no need for function info
+	return g_strdup_printf("%s:%d: %s", state.short_src, state.currentline, msg);
+}
+
 static gboolean timedout = FALSE;
 
 static void timeout_script(int sig)
@@ -248,67 +264,53 @@ static void timeout_script(int sig)
 
 static void check_timeout_script(lua_State *lua, lua_Debug *state)
 {
+	// state is invalid?
 	if (!timedout)
 		return;
+	// don't add backtrace etc. here; just the location
+	gchar *msg = error_add_location(lua, _("script timed out"));
+	lua_pushstring(lua, msg);
+	g_free(msg);
+	lua_error(lua);
+}
 
-	const char *msg = _("Script timed out");
-
-	// could do debug.traceback(msg, 1) if we wanted a long backtrace
-	// call debug.getinfo(1)
-	lua_pushglobaltable(lua);
-	lua_getfield(lua, -1, "debug");
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 1);
-		goto basic_error;
-	}
-	lua_getfield(lua, -1, "getinfo");
-	if (!lua_isfunction(lua, -1)) {
-		lua_pop(lua, 2);
-		goto basic_error;
-	}
-	lua_pushinteger(lua, 1);
-	lua_call(lua, 1, 1);
-	// want a table as output
-	if (!lua_istable(lua, -1)) {
-		lua_pop(lua, 3);
-		goto basic_error;
-	}
-	// look up <table>.short_src
-	lua_getfield(lua, -1, "short_src");
-	if (!lua_isstring(lua, -1)) {
-		lua_pop(lua, 4);
-		goto basic_error;
-	}
-	const char *source = lua_tostring(lua, -1);
-	lua_pop(lua, 1); // result not needed now; discard
-	// look up <table>.currentline
-	lua_getfield(lua, -1, "currentline");
-	if (!lua_isinteger(lua, -1)) {
-		lua_pop(lua, 4);
-		goto basic_error;
-	}
-	int lineno = lua_tointeger(lua, -1);
-	lua_pop(lua, 4); // stack restored to size on entry
-	// create & stack the error string with file and line info
-	char *fullmsg = g_strdup_printf("%s:%d: %s", source, lineno, msg);
+static int script_error(lua_State *lua)
+{
+	const char *msg = lua_tostring(lua, -1);
+	lua_pop(lua, 1);
+	// only the backtrace here, as the location's probably present already
+	gchar *fullmsg = error_add_backtrace(lua, msg);
 	lua_pushstring(lua, fullmsg);
 	g_free(fullmsg);
-	lua_error(lua); // doesn't return
-	return; // hint to the compiler
-
-basic_error:
-	lua_pushstring(lua, msg);
-	lua_error(lua);
+	return 1;
 }
 
 
 /**
  *
  */
-void
-run_script(lua_State *lua)
+int
+run_script(lua_State *lua, const char *filename)
 {
 #define SCRIPT_TIMEOUT_SECONDS 5
+
+	if (!lua)
+		return -1;
+
+	lua_pushcfunction(lua, script_error);
+	int errpos = lua_gettop(lua);
+
+	int result = luaL_loadfile(lua, filename);
+
+	if (result) {
+		// We got an error, print it
+		logger_err_printf(_("Error: %s\n"), lua_tostring(lua, -1));
+		lua_remove(lua, errpos); // unstack the error handler
+		lua_pop(lua, 1);
+		return -1;
+	}
+
+	// Okay, loaded the script; now run it
 
 	struct sigaction newact, oldact;
 	newact.sa_handler = timeout_script;
@@ -319,14 +321,21 @@ run_script(lua_State *lua)
 	lua_sethook(lua, check_timeout_script, LUA_MASKCOUNT, 1);
 	sigaction(SIGALRM, &newact, &oldact);
 	alarm(SCRIPT_TIMEOUT_SECONDS);
-	int s = lua_pcall(lua, 0, LUA_MULTRET, 0);
+
+	int s = lua_pcall(lua, 0, LUA_MULTRET, errpos);
+
 	alarm(0);
 	sigaction(SIGALRM, &oldact, NULL);
 
+	lua_remove(lua, errpos); // unstack the error handler
+
 	if (s) {
+		// no info to add here; just output the error
 		logger_err_printf(_("Error: %s\n"), lua_tostring(lua, -1));
 		lua_pop(lua, 1); // else we leak it
 	}
+
+	return 0;
 }
 
 

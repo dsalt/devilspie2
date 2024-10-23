@@ -726,7 +726,7 @@ And the rest of the commands are used to modify the properties of the windows:
   Sleep for a number of milliseconds, between 1 and 1000 (1 second).
 
   This is a convenience function so that you don't have to use `os.execute`
-  (to run `sleep`) or `posix.nanosleep`.
+  (to run `sleep`) or (from LuaPosix `posix.time`) `nanosleep`.
 
   *(Available from version 0.46)*
 
@@ -760,7 +760,9 @@ And the rest of the commands are used to modify the properties of the windows:
   <a name="focus" />
 
 
-### Simple script example
+### Simple script examples
+
+**Showing debug output and resizing and maximisation of specific windows:**
 
 ```lua
 -- the debug_print command only prints to stdout
@@ -778,7 +780,45 @@ end
 
 -- Make Firefox always start maximised.
 if (get_application_name() == "Firefox") then
-   maximise()
+   maximise() -- maximize() for compatibility with <0.45
+end
+```
+
+**Showing handling of conflict between `devilspie2` and other programs (in this case,
+`emacs`):**
+
+This example uses [millisleep](#user-content-millisleep) to enforce a short
+delay.
+
+```lua
+-- Make Emacs (emacs or emacs-gtk) always start maximised.
+win_class = get_class_instance_name()
+
+debug_print("Window class: " .. win_class)
+
+if win_class == "emacs" or win_class == "Emacs" then
+  -- Emacs applies default window size etc. after a brief delay,
+  -- potentially overriding devilspie2.
+  --
+  -- A brief pause (here, of 0.1s) ensures that devilspie2's actions on the
+  -- window take effect after Emacs completes its initialisation. A shorter
+  -- pause may work, or a longer one may be needed. Experiment! Could be
+  -- that 'millisleep(10)' (0.01s) works well on one PC…?
+  --
+  -- If you prefer, you can have Emacs maximise its window (as in this
+  -- example) via one of its configuration files - early-init.el, which is
+  -- normally faster (and avoids a possible visual effect), or init.el –
+  -- using this LISP statement:
+  --   (push '(fullscreen .  maximized) default-frame-alist)
+  --
+  -- 'millisleep' is new to 0.46. The 0.1s delay for older versions:
+  --   option 1:
+  --     os.execute("sleep 0.1")
+  --   option 2 (needs luaposix):
+  --     nanosleep = require "posix.time".nanosleep
+  --     nanosleep{tv_nsec=100e6}
+  millisleep(100)
+  maximise() -- maximize() for compatibility with <0.45
 end
 ```
 

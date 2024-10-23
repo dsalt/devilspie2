@@ -201,13 +201,11 @@ int load_config(gchar *filename)
 
 	if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
 
-		if (load_script(config_lua_state, filename) != 0) {
+		if (run_script(config_lua_state, filename) != 0) {
 			logger_err_printf(_("Error: %s\n"), filename);
 			result = -1;
 			goto EXITPOINT;
 		}
-
-		run_script(config_lua_state);
 
 		event_lists[W_CLOSE] = get_table_of_strings(config_lua_state,
 		                         script_folder,

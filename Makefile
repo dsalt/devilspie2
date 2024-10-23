@@ -120,15 +120,12 @@ all: .lua $(BIN)/$(NAME)
 	@if $(PKG_CONFIG) --cflags --silence-errors $(LUA) >/dev/null; then :; else echo '$(LUA) dev files not found - falling back on system default lua' >&2; fi
 
 $(OBJ)/%.o: $(SRC)/%.c
+	@mkdir -p $(OBJ)
 	$(CC) $(LOCAL_CFLAGS) $(LOCAL_CPPFLAGS) -c $< -o $@
 
 $(BIN)/$(NAME): $(BIN) $(OBJECTS)
+	@mkdir -p -- $(BIN)
 	$(CC) $(LOCAL_CFLAGS) $(LOCAL_LDFLAGS) $(OBJECTS) -o $(PROG) $(LIBS)
-
-$(OBJECTS): $(OBJ)
-
-$(BIN) $(OBJ):
-	mkdir -p -- $@
 
 .PHONY: clean
 clean:

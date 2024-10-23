@@ -96,10 +96,8 @@ static void load_list_of_scripts(WnckScreen *screen G_GNUC_UNUSED, WnckWindow *w
 			if (g_str_has_suffix((gchar*)filename, ".lua")) {
 
 				// init the script, run it
-				if (!load_script(global_lua_state, filename)) {
-				}
-
-				run_script(global_lua_state);
+				if (!run_script(global_lua_state, filename))
+					/**/;
 
 			}
 			temp_file_list=temp_file_list->next;
