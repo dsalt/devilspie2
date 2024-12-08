@@ -112,6 +112,7 @@ register_cfunctions(lua_State *lua)
 	DP2_REGISTER(lua, decorate_window);
 	DP2_REGISTER(lua, undecorate_window);
 
+	DP2_REGISTER(lua, get_window_workspace);
 	DP2_REGISTER(lua, set_window_workspace);
 	DP2_REGISTER(lua, change_workspace);
 	DP2_REGISTER(lua, get_workspace_count);
