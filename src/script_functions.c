@@ -998,13 +998,16 @@ int c_set_window_workspace(lua_State *lua)
 
 	if (window && workspace_idx0 > -1) {
 		WnckScreen *screen = wnck_window_get_screen(window);
+		WnckWorkspace *current_ws = wnck_window_get_workspace(window);
 		WnckWorkspace *workspace = wnck_screen_get_workspace(screen, workspace_idx0);
 
 		if (!workspace) {
 			g_warning(_("Workspace number %d does not exist!"), workspace_idx0+1);
 		}
 		if (!devilspie2_emulate) {
-			wnck_window_move_to_workspace(window, workspace);
+			if(current_ws != workspace) { // Avoid a no-op
+				wnck_window_move_to_workspace(window, workspace);
+			}
 		}
 	}
 
