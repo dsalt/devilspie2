@@ -132,6 +132,8 @@ register_cfunctions(lua_State *lua)
 	DP2_REGISTER(lua, set_skip_tasklist);
 	DP2_REGISTER(lua, set_skip_pager);
 
+	DP2_REGISTER(lua, get_window_is_minimized);
+	lua_register(lua, "get_window_is_minimised", c_get_window_is_minimized);
 	DP2_REGISTER(lua, get_window_is_maximized);
 	lua_register(lua, "get_window_is_maximised", c_get_window_is_maximized);
 

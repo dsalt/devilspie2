@@ -781,7 +781,7 @@ int c_minimize(lua_State *lua)
 	if (!devilspie2_emulate) {
 		WnckWindow *window = get_current_window();
 
-		if (window) {
+		if (window && FALSE == wnck_window_is_minimized(window)) {
 			wnck_window_minimize(window);
 		}
 	}
@@ -802,7 +802,7 @@ int c_unminimize(lua_State *lua)
 	if (!devilspie2_emulate) {
 		WnckWindow *window = get_current_window();
 
-		if (window) {
+		if (window && TRUE == wnck_window_is_minimized(window)) {
 			wnck_window_unminimize (window, current_time());
 		}
 	}
@@ -1406,6 +1406,19 @@ int c_set_skip_pager(lua_State *lua)
 	return 0;
 }
 
+int c_get_window_is_minimized(lua_State *lua)
+{
+	if (!check_param_count(lua, "get_window_is_minimized", 0)) {
+		return 0;
+	}
+
+	WnckWindow *window = get_current_window();
+	gboolean is_minimized = window ? wnck_window_is_minimized(window) : FALSE;
+
+	lua_pushboolean(lua, is_minimized);
+
+	return 1;
+}
 
 /**
  *
