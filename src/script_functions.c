@@ -926,7 +926,7 @@ int c_get_window_workspace(lua_State *lua)
 		return -1;
 	}
 	
-	lua_pushinteger(lua, wnck_workspace_get_number(workspace));
+	lua_pushinteger(lua, wnck_workspace_get_number(workspace) + 1); // Workspace indices in Lua are 1-based
 	lua_pushstring(lua, wnck_workspace_get_name(workspace));
 
 	return 2;
