@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
 	g_signal_connect(mon, "changed", G_CALLBACK(folder_changed_callback),
 	                 (gpointer)(config_filename));
 
-	global_lua_state = init_script();
+	global_lua_state = init_script(script_folder);
 	print_script_lists();
 
 	if (debug) printf("------------\n");
