@@ -16,3 +16,4 @@ src/gitversion.c
 sciteprojrc.lua
 *~
 .cache/
+compile_commands.json
