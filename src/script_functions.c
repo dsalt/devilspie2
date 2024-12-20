@@ -911,6 +911,27 @@ int c_get_window_is_decorated(lua_State *lua)
 
 	return 1;
 }
+int c_get_active_workspace(lua_State *lua)
+{
+	if (!check_param_count(lua, "c_get_active_workspace", 0)) {
+		return 0;
+	}
+	WnckWindow *window = get_current_window();
+	if(window == NULL) {
+		g_printerr("No Current Window");
+		return -1;
+	}
+	WnckWorkspace * workspace = wnck_screen_get_active_workspace(wnck_window_get_screen(window));
+	if(workspace == NULL) {
+		g_printerr("No Screen for Current Window");
+		return -1;
+	}
+	
+	lua_pushinteger(lua, wnck_workspace_get_number(workspace) + 1 );
+	lua_pushstring(lua, wnck_workspace_get_name(workspace));
+
+	return 2;
+}
 
 /**
  Given a workspace name, perform a linear, case-sensitive search for
