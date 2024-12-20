@@ -19,6 +19,9 @@
 #ifndef __HEADER_SCRIPT_
 #define __HEADER_SCRIPT_
 
+#include <lua.h>
+#include <glib.h>
+
 /**
  *
  */
@@ -27,7 +30,8 @@
 /**
  *
  */
-lua_State *init_script();
+lua_State *init_script(gchar *script_folder);
+void configureLuaPaths(lua_State *lua, gchar * script_folder);
 
 void register_cfunctions(lua_State *lua);
 int run_script(lua_State *lua, const char *filename);

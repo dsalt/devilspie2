@@ -53,15 +53,37 @@ gboolean devilspie2_emulate = FALSE;
 lua_State *global_lua_state = NULL;
 
 /**
+As the script folder is configurable and doesn't _have_ to be the working directory, Lua's default search path
+(package.path) for "require"s won't help much (as it uses "./?.lua" and "./?/init.lua").
+This function adds <script_folder>/?.lua and <script_folder>/?/init.lua to enable the use of "requires" in scripts.
+ */
+void configureLuaPaths(lua_State *lua, gchar * script_folder)
+{
+	const char PACKAGE_CMD[] = "package.path = package.path .. ';%s;%s'";
+	const uint NUM_SEPS = 3;
+
+	gchar * file = g_build_filename(script_folder, "?.lua", NULL);
+	gchar * mod = g_build_filename(script_folder, "?", "init.lua", NULL);
+	gulong maxlen = strlen(file) + strlen(mod) + sizeof(PACKAGE_CMD) + (NUM_SEPS * 3);
+	gchar buff[maxlen];
+	if ( maxlen >= g_snprintf(buff, maxlen, PACKAGE_CMD, file, mod) )
+	{
+		luaL_dostring(lua, buff );
+	}
+}
+
+/**
  *
  */
 lua_State *
-init_script()
+init_script(gchar * script_folder)
 {
 	lua_State *lua = luaL_newstate();
 	luaL_openlibs(lua);
 
 	register_cfunctions(lua);
+
+	configureLuaPaths(lua, script_folder);
 
 	return lua;
 }

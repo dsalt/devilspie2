@@ -196,7 +196,7 @@ int load_config(gchar *filename)
 
 	int total_number_of_files = 0;
 
-	config_lua_state = init_script();
+	config_lua_state = init_script(script_folder);
 
 	if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
 
@@ -206,6 +206,9 @@ int load_config(gchar *filename)
 			goto EXITPOINT;
 		}
 
+		event_lists[W_OPEN] = get_table_of_strings(config_lua_state,
+		                         script_folder,
+		                         "scripts_window_open");
 		event_lists[W_CLOSE] = get_table_of_strings(config_lua_state,
 		                         script_folder,
 		                         "scripts_window_close");
@@ -220,28 +223,35 @@ int load_config(gchar *filename)
 		                         "scripts_window_name_change");
 	}
 
-	// add the files in the folder to our linked list
-	while ((current_file = g_dir_read_name(dir))) {
+	/*
+	Allow the user to specify a limited set of files, as there might be .lua files being used in
+	"require"s or some other files the user may not want to be executed.
+	*/
+	if(event_lists[W_OPEN] == NULL)
+	{
+		// add the files in the folder to our linked list
+		while ((current_file = g_dir_read_name(dir))) {
 
-		gchar *temp_filename = g_build_path(G_DIR_SEPARATOR_S,
-		                                    script_folder,
-		                                    current_file,
-		                                    NULL);
+			gchar *temp_filename = g_build_path(G_DIR_SEPARATOR_S,
+												script_folder,
+												current_file,
+												NULL);
 
-		// we only bother with *.lua in the folder
-		// we also ignore dot files
-		if (current_file[0] != '.' && g_str_has_suffix(current_file, ".lua")) {
-			if (!is_in_any_list(temp_filename)) {
-				temp_window_open_file_list =
-				    add_lua_file_to_list(temp_window_open_file_list, temp_filename);
+			// we only bother with *.lua in the folder
+			// we also ignore dot files
+			if (current_file[0] != '.' && g_str_has_suffix(current_file, ".lua")) {
+				if (!is_in_any_list(temp_filename)) {
+					temp_window_open_file_list =
+						add_lua_file_to_list(temp_window_open_file_list, temp_filename);
+				}
+				total_number_of_files++;
 			}
-			total_number_of_files++;
+
+			g_free(temp_filename);
 		}
 
-		g_free(temp_filename);
+		event_lists[W_OPEN] = temp_window_open_file_list;
 	}
-
-	event_lists[W_OPEN] = temp_window_open_file_list;
 EXITPOINT:
 	if (config_lua_state)
 		done_script(config_lua_state);
