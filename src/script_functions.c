@@ -1015,6 +1015,11 @@ int c_set_window_workspace(lua_State *lua)
 		default: break;
 	}
 
+	if (workspace_idx0 == -1){
+		lua_pushboolean(lua, FALSE);
+		return 1;
+	}
+
 	WnckWindow *window = get_current_window();
 
 	if (window && workspace_idx0 > -1) {
