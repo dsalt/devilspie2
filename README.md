@@ -285,6 +285,14 @@ information:
 
   *(Available from version 0.27)*
 
+  * `get_active_workspace`
+  <a name="user-content-get-active-workspace" />
+
+  Returns the index and name of the active workspace
+  (Obtained via the current window's Screen)
+
+  *(Available from version 0.46)*
+
 * `get_screen_geometry()`
   <a name="user-content-get-screen-geometry" />
 
