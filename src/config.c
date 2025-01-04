@@ -189,7 +189,20 @@ static gboolean is_in_any_list(gchar *filename)
 	return FALSE;
 }
 
+/**
+ * To support the use of 'require' in user scripts, the greedy loading and assigning to the 'open'
+ * event needs to be suppressed.  'scripts_window_open' controls this suppression.
+ * If it's defined at all, the greedy loading will be suppressed.
+ * The variable can be a single file ref or multiple, or defined to be empty (table or string) 
+ */
+gboolean should_greedy_load_scripts(lua_State *luastate)
+{
+	if(event_lists[W_OPEN] != NULL) return FALSE; // Multiple files were listed
+	if(get_lua_table(luastate, "scripts_window_open")) return FALSE; // Defined, but was an empty table
+	if(get_single_script_name(luastate, "scripts_window_open")) return FALSE; // Defined as an empty string
 
+	return TRUE;
+}
 
 /**
  *  load_config
@@ -248,7 +261,7 @@ int load_config(gchar *filename)
 	Allow the user to specify a limited set of files, as there might be .lua files being used in
 	"require"s or some other files the user may not want to be executed.
 	*/
-	if(event_lists[W_OPEN] == NULL)
+	if(should_greedy_load_scripts(config_lua_state))
 	{
 		// add the files in the folder to our linked list
 		while ((current_file = g_dir_read_name(dir))) {
