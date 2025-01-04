@@ -82,21 +82,18 @@ static void load_list_of_scripts(WnckScreen *screen G_GNUC_UNUSED, WnckWindow *w
 	set_current_window(window);
 
 	// for every file in the folder - load the script
-	if (event_lists[W_OPEN] != NULL) {
+	while(temp_file_list) {
+		gchar *filename = (gchar*)temp_file_list->data;
 
-		while(temp_file_list) {
-			gchar *filename = (gchar*)temp_file_list->data;
+		// is it a Lua file?
+		if (g_str_has_suffix((gchar*)filename, ".lua")) {
 
-			// is it a Lua file?
-			if (g_str_has_suffix((gchar*)filename, ".lua")) {
+			// init the script, run it
+			if (!run_script(global_lua_state, filename))
+				/**/;
 
-				// init the script, run it
-				if (!run_script(global_lua_state, filename))
-					/**/;
-
-			}
-			temp_file_list=temp_file_list->next;
 		}
+		temp_file_list=temp_file_list->next;
 	}
 	return;
 
