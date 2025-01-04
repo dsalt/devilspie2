@@ -17,6 +17,7 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  */
 #include <glib.h>
+#include <string.h>
 
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <libwnck/libwnck.h>
@@ -76,7 +77,29 @@ static GSList *add_lua_file_to_list(GSList *list, gchar *filename)
 	return list;
 }
 
+static gboolean get_lua_table(lua_State *luastate, gchar *table_name)
+{
+	if (luastate == NULL) return FALSE;
 
+	lua_getglobal(luastate, table_name);
+
+	if (lua_isnil(luastate, -1)) return FALSE;
+
+	return lua_istable(luastate, -1);
+}
+
+static gchar * get_single_script_name(lua_State *luastate, gchar *table_name)
+{
+	if (luastate == NULL) return NULL;
+
+	lua_getglobal(luastate, table_name);
+
+	if (lua_isnil(luastate, -1)) return NULL;
+
+	if (lua_isstring(luastate, -1) == FALSE) return NULL;
+
+	return (gchar *)lua_tostring(luastate, -1);
+}
 
 /**
  *
@@ -87,19 +110,7 @@ static GSList *get_table_of_strings(lua_State *luastate,
 {
 	GSList *list = NULL;
 
-	if (luastate) {
-
-		lua_getglobal(luastate, table_name);
-
-		// Do we have a value?
-		if (lua_isnil(luastate, -1)) {
-			goto EXITPOINT;
-		}
-
-		// Is it a table?
-		if (!lua_istable(luastate, -1)) {
-			goto EXITPOINT;
-		}
+	if (get_lua_table(luastate, table_name)) {
 
 		lua_pushnil(luastate);
 
@@ -118,8 +129,18 @@ static GSList *get_table_of_strings(lua_State *luastate,
 		}
 		lua_pop(luastate, 1);
 	}
+	else {
+		gchar * oneFileString = get_single_script_name(luastate, table_name);
+		if(oneFileString != NULL && strlen(oneFileString) > 0)
+		{
+			gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
+													script_folder,
+													oneFileString,
+													NULL);
 
-EXITPOINT:
+			list = add_lua_file_to_list(list, added_filename);
+		}
+	}
 
 	return list;
 }
