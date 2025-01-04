@@ -66,12 +66,16 @@ static gint filename_list_sortfunc(gconstpointer a,gconstpointer b)
 /**
  *
  */
-static GSList *add_lua_file_to_list(GSList *list, gchar *filename)
+static GSList *add_lua_file_to_list(GSList *list, const gchar *script_folder, const gchar *filename)
 {
-	gchar *temp_filename = g_strdup(filename);
+	gchar *temp_filename = g_strdup(filename);  // Is this really needed? Daren't remove
+	gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
+											script_folder,
+											temp_filename,
+											NULL);
 
 	list=g_slist_insert_sorted(list,
-	                           temp_filename,
+	                           added_filename,
 	                           filename_list_sortfunc);
 
 	return list;
@@ -118,12 +122,7 @@ static GSList *get_table_of_strings(lua_State *luastate,
 			if (lua_isstring(luastate, -1)) {
 				char *temp = (char *)lua_tostring(luastate, -1);
 
-				gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
-				                                     script_folder,
-				                                     temp,
-				                                     NULL);
-
-				list = add_lua_file_to_list(list, added_filename);
+				list = add_lua_file_to_list(list, script_folder, temp);
 			}
 			lua_pop(luastate, 1);
 		}
@@ -133,12 +132,7 @@ static GSList *get_table_of_strings(lua_State *luastate,
 		gchar * oneFileString = get_single_script_name(luastate, table_name);
 		if(oneFileString != NULL && strlen(oneFileString) > 0)
 		{
-			gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
-													script_folder,
-													oneFileString,
-													NULL);
-
-			list = add_lua_file_to_list(list, added_filename);
+			list = add_lua_file_to_list(list, script_folder, oneFileString);
 		}
 	}
 
@@ -150,7 +144,7 @@ static GSList *get_table_of_strings(lua_State *luastate,
  *  is_in_list
  * Go through _one_ list, and check if the filename is in this list
  */
-static gboolean is_in_list(GSList *list, gchar *filename)
+static gboolean is_in_list(GSList *list, const gchar *filename)
 {
 	gboolean result = FALSE;
 
@@ -177,7 +171,7 @@ static gboolean is_in_list(GSList *list, gchar *filename)
  *  is_in_any_list
  * Go through our lists, and check if the file is already in any of them
  */
-static gboolean is_in_any_list(gchar *filename)
+static gboolean is_in_any_list(const gchar *filename)
 {
 	win_event_type i;
 
@@ -266,22 +260,15 @@ int load_config(gchar *filename)
 		// add the files in the folder to our linked list
 		while ((current_file = g_dir_read_name(dir))) {
 
-			gchar *temp_filename = g_build_path(G_DIR_SEPARATOR_S,
-												script_folder,
-												current_file,
-												NULL);
-
 			// we only bother with *.lua in the folder
 			// we also ignore dot files
 			if (current_file[0] != '.' && g_str_has_suffix(current_file, ".lua")) {
-				if (!is_in_any_list(temp_filename)) {
+				if (!is_in_any_list(current_file)) {
 					temp_window_open_file_list =
-						add_lua_file_to_list(temp_window_open_file_list, temp_filename);
+						add_lua_file_to_list(temp_window_open_file_list, script_folder, current_file);
 				}
 				total_number_of_files++;
 			}
-
-			g_free(temp_filename);
 		}
 
 		event_lists[W_OPEN] = temp_window_open_file_list;
