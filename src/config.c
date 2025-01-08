@@ -171,7 +171,7 @@ static gboolean is_in_list(GSList *list, const gchar *filename)
  *  is_in_any_list
  * Go through our lists, and check if the file is already in any of them
  */
-static gboolean is_in_any_list(const gchar *filename)
+gboolean is_in_any_list(const gchar *filename)
 {
 	win_event_type i;
 
@@ -189,7 +189,7 @@ static gboolean is_in_any_list(const gchar *filename)
  * If it's defined at all, the greedy loading will be suppressed.
  * The variable can be a single file ref or multiple, or defined to be empty (table or string) 
  */
-gboolean should_greedy_load_scripts(lua_State *luastate)
+static gboolean should_greedy_load_scripts(lua_State *luastate)
 {
 	if(event_lists[W_OPEN] != NULL) return FALSE; // Multiple files were listed
 	if(get_lua_table(luastate, "scripts_window_open")) return FALSE; // Defined, but was an empty table

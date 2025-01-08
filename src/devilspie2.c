@@ -266,6 +266,34 @@ void print_script_lists()
 	}
 }
 
+/**
+Reload the config and re-initialise the Lua VM
+ */
+void refresh_config_and_script()
+{
+	clear_file_lists();
+	set_current_window(NULL);
+	
+	if (load_config(config_filename) != 0) {
+		/*
+		If the loading fails, the file lists have been cleared so no processing
+		can occur. As the old lists are now lost, the only option is to exit now.
+		*/
+		printf("Configuration File has caused an error, exiting");
+		devilspie_exit();
+		return;
+	}
+	
+	global_lua_state = reinit_script(global_lua_state, script_folder);
+
+	if (debug)
+		printf("Files in folder updated!\n - new lists:\n\n");
+
+	print_script_lists();
+
+	if (debug)
+		printf("-----------\n");
+}
 
 /**
  *
@@ -276,24 +304,11 @@ void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
                              GFileMonitorEvent event,
                              gpointer user_data)
 {
-	gchar *our_filename = (gchar*)(user_data);
-
 	// If a file is created or deleted, we need to check the file lists again
 	if ((event == G_FILE_MONITOR_EVENT_CREATED) ||
-	    (event == G_FILE_MONITOR_EVENT_DELETED)) {
-
-		clear_file_lists();
-
-		set_current_window(NULL);
-		load_config(our_filename);
-
-		if (debug)
-			printf("Files in folder updated!\n - new lists:\n\n");
-
-		print_script_lists();
-
-		if (debug)
-			printf("-----------\n");
+	    (event == G_FILE_MONITOR_EVENT_DELETED))
+	{
+		refresh_config_and_script();
 	}
 
 	// Also monitor if our devilspie2.lua file is changed - since it handles
@@ -302,17 +317,17 @@ void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
 		if (first_file) {
 			gchar *short_filename = g_file_get_basename(first_file);
 
-			if (g_strcmp0(short_filename, "devilspie2.lua")==0) {
-
-				clear_file_lists();
-
-				set_current_window(NULL);
-				load_config(our_filename);
-
-				print_script_lists();
-
-				if (debug)
-					printf("----------");
+			if (g_strcmp0(short_filename, "devilspie2.lua")==0)
+			{
+				refresh_config_and_script();
+			}
+			else if( g_str_has_suffix((gchar*)short_filename, ".lua") && is_in_any_list(g_file_get_path(first_file)) == FALSE)
+			{	// May be a module file
+				gchar * module_name = g_utf8_substring(short_filename, 0, strlen(short_filename) - 4);
+				if(is_module_loaded(global_lua_state, module_name) == TRUE)
+				{
+					global_lua_state = reinit_script(global_lua_state, script_folder);
+				}
 			}
 		}
 	}

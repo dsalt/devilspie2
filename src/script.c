@@ -376,3 +376,36 @@ done_script(lua_State *lua)
 	//lua=NULL;
 }
 
+lua_State * reinit_script(lua_State *lua, gchar * script_folder)
+{
+	done_script(lua);
+	return init_script(script_folder);
+}
+
+/**
+ * Given a module name, ask lua if it is a loaded module in the given Lua VM
+ */
+gboolean is_module_loaded(lua_State * lua, const gchar * module_name)
+{
+	if( lua == NULL ) return FALSE;
+
+	const char PACKAGE_CMD[] = "return package.loaded['%s']";
+
+	gulong maxlen = strlen(module_name) + sizeof(PACKAGE_CMD);
+	gchar buff[maxlen];
+	if ( maxlen >= g_snprintf(buff, maxlen, PACKAGE_CMD, module_name) )
+	{
+		if ( luaL_dostring(lua, buff ) ) {
+			return FALSE;  // Couldn't even call into Lua, something is wrong, just let things fail elsewhere
+		}
+
+		if( lua_istable(lua, -1) )  // Loaded modules will normally be a table
+		{
+			lua_pop(lua, -1);
+			return TRUE;
+		}
+		// But really simple modules that return nothing may just be a boolean value to indicate that they have been loaded
+		if( lua_isboolean(lua, -1) && lua_toboolean(lua, -1) == TRUE) return TRUE;
+	}
+	return FALSE;
+}
