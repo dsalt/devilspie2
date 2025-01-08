@@ -36,6 +36,8 @@ void configureLuaPaths(lua_State *lua, gchar * script_folder);
 void register_cfunctions(lua_State *lua);
 int run_script(lua_State *lua, const char *filename);
 void done_script(lua_State *lua);
+lua_State * reinit_script(lua_State *lua, gchar * script_folder);
+gboolean is_module_loaded(lua_State * lua, const gchar * module_name);
 
 
 extern gboolean devilspie2_debug;
