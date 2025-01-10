@@ -316,19 +316,23 @@ void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
 	if (event == G_FILE_MONITOR_EVENT_CHANGED) {
 		if (first_file) {
 			gchar *short_filename = g_file_get_basename(first_file);
+			gchar *full_path = g_file_get_path(first_file);
 
 			if (g_strcmp0(short_filename, "devilspie2.lua")==0)
 			{
 				refresh_config_and_script();
 			}
-			else if( g_str_has_suffix((gchar*)short_filename, ".lua") && is_in_any_list(g_file_get_path(first_file)) == FALSE)
-			{	// May be a module file
+			else if( g_str_has_suffix((gchar*)short_filename, ".lua") && is_in_any_list(full_path) == FALSE)
+			{	// May be a module file 
 				gchar * module_name = g_utf8_substring(short_filename, 0, strlen(short_filename) - 4);
 				if(is_module_loaded(global_lua_state, module_name) == TRUE)
 				{
 					global_lua_state = reinit_script(global_lua_state, script_folder);
 				}
+				g_free(module_name);
 			}
+			g_free(short_filename);
+			g_free(full_path);
 		}
 	}
 }
@@ -389,6 +393,7 @@ int main(int argc, char *argv[])
 
 	g_free(full_desc_string);
 	g_free(devilspie2_description);
+	g_option_context_free(context);
 
 	// if the folder is NULL, default to ~/.config/devilspie2/
 	if (script_folder == NULL) {
@@ -493,6 +498,7 @@ int main(int argc, char *argv[])
 //	mon = g_file_monitor_directory(directory_file, G_FILE_MONITOR_WATCH_MOUNTS,
 	mon = g_file_monitor_directory(directory_file, G_FILE_MONITOR_NONE,
 	                               NULL, NULL);
+	g_object_unref(directory_file);
 	if (!mon) {
 		printf("%s\n", _("Couldn't create directory monitor!"));
 		return EXIT_FAILURE;
