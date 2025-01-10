@@ -70,6 +70,8 @@ void configureLuaPaths(lua_State *lua, gchar * script_folder)
 	{
 		luaL_dostring(lua, buff );
 	}
+	g_free(file);
+	g_free(mod);
 }
 
 /**
