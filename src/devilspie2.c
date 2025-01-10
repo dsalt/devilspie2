@@ -275,12 +275,7 @@ void refresh_config_and_script()
 	set_current_window(NULL);
 	
 	if (load_config(config_filename) != 0) {
-		/*
-		If the loading fails, the file lists have been cleared so no processing
-		can occur. As the old lists are now lost, the only option is to exit now.
-		*/
-		printf("Configuration File has caused an error, exiting");
-		devilspie_exit();
+		printf("Configuration file cannot be re-loaded. Processing will not continue until the error is corrected");
 		return;
 	}
 	
