@@ -311,6 +311,28 @@ information:
 
   *(Available from version 0.27)*
 
+* `get_workspaces()`
+  <a name="user-content-get-workspaces"></a>
+
+  Returns 2 tables listing currently known workspaces (by Name and ID).
+  i.e. For 3 workspaces "First space", "Second" & "Third and final" and IDs of 1, 2 & 3 the returned tables
+  would be:
+  ```lua
+  local by_name, by_id = get_workspaces()
+  by_name = {
+    "First space" = 1,
+    "Second" = 2,
+    "Third and final" = 3
+  }
+  by_id = {
+    "First space", "Second", "Third and final"
+  }
+  by_name["First space"] == 1
+  by_id[3] == "Third and final"
+  ```
+    
+  *(Available from version 0.46)*
+
   * `get_active_workspace`
   <a name="user-content-get-active-workspace" />
 

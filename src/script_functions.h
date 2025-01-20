@@ -62,6 +62,7 @@ int c_set_window_workspace(lua_State *lua);
 int c_get_active_workspace(lua_State * lua);
 int c_change_workspace(lua_State *lua);
 int c_get_workspace_count(lua_State *lua);
+int c_get_workspaces(lua_State *lua);
 
 int c_unmaximize(lua_State *lua);
 int c_maximize(lua_State *lua);
