@@ -1071,6 +1071,57 @@ int c_get_workspace_count(lua_State *lua)
 	return 1;
 }
 
+/**
+ * Returns 2 tables listing all workspaces, keyed by name, keyed by Id
+ * If workspaces cannot be obtained, 2 empty tables will be returned
+ */
+int c_get_workspaces(lua_State *lua)
+{
+	WnckWindow *window = get_current_window();
+	if(window == NULL) {
+		lua_newtable(lua);
+		lua_newtable(lua);
+		return 2;
+	}
+	
+	WnckScreen *screen = wnck_window_get_screen(window);
+	if(screen == NULL) {
+		lua_newtable(lua);
+		lua_newtable(lua);
+		return 2;
+	}
+
+	GList * workspaces = wnck_screen_get_workspaces(screen);
+	GList * workspaces_id = workspaces;
+
+	// Keyed on name
+	lua_newtable(lua);
+	while (workspaces) {
+		WnckWorkspace *workspace = workspaces->data;
+		const char * name = wnck_workspace_get_name(workspace);
+		int id = wnck_workspace_get_number(workspace) + 1;
+		lua_pushinteger(lua, id);
+		lua_setfield(lua, -2, name);
+		
+		workspaces = workspaces->next;
+	}
+
+	// Keyed on ID 
+	lua_newtable(lua);
+	workspaces = workspaces_id;
+	while (workspaces) {
+		WnckWorkspace *workspace = workspaces->data;
+		const char * name = wnck_workspace_get_name(workspace);
+		int id = wnck_workspace_get_number(workspace) + 1;
+		lua_pushstring(lua, name);
+		lua_rawseti(lua, -2, id);
+
+		workspaces = workspaces->next;
+	}
+
+	return 2;
+}
+
 
 /**
  * Unmaximize window
