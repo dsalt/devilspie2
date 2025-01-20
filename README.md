@@ -286,7 +286,7 @@ information:
   *(Available from version 0.27)*
 
 * `get_window_workspace()`
-  <a name="user-content-get-window-workspace"/>
+  <a name="user-content-get-window-workspace"></a>
 
   Returns 2 values: the index and name of the workspace the current window is on.
 
