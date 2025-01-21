@@ -68,14 +68,9 @@ static gint filename_list_sortfunc(gconstpointer a,gconstpointer b)
  */
 static GSList *add_lua_file_to_list(GSList *list, const gchar *script_folder, const gchar *filename)
 {
-	gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
-											script_folder,
-											filename,
-											NULL);
+	gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,script_folder, filename, NULL);
 
-	list=g_slist_insert_sorted(list,
-	                           added_filename,
-	                           filename_list_sortfunc);
+	list = g_slist_insert_sorted( list, added_filename, filename_list_sortfunc);
 
 	return list;
 }
