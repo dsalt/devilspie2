@@ -1746,7 +1746,9 @@ int c_set_window_property(lua_State *lua)
 
 	switch (type) {
 	case LUA_TSTRING:
+	{
 		gboolean use_utf8 = default_use_utf8;
+	    
 		if (top > 2) {
 			type = lua_type(lua, 3);
 			if (type != LUA_TBOOLEAN) {
@@ -1759,7 +1761,7 @@ int c_set_window_property(lua_State *lua)
 			my_wnck_set_string_property(wnck_window_get_xid(window), my_wnck_atom_get(property),
 						    lua_tostring(lua, 2), use_utf8);
 		break;
-
+	}
 	case LUA_TNUMBER:
 		if (!devilspie2_emulate && window)
 			my_wnck_set_cardinal_property(wnck_window_get_xid(window), my_wnck_atom_get(property),
@@ -1929,6 +1931,7 @@ int c_set_viewport(lua_State *lua)
 	switch (top)
 	{
 	case 1:
+	{
 		WnckScreen *screen;
 		int x;
 		int type = lua_type(lua, 1);
@@ -1982,7 +1985,9 @@ int c_set_viewport(lua_State *lua)
 
 		lua_pushboolean(lua, TRUE);
 		return 1;
+	}
 	case 2:
+	{
 		int type1 = lua_type(lua, 1);
 		int type2 = lua_type(lua, 2);
 
@@ -2032,6 +2037,7 @@ int c_set_viewport(lua_State *lua)
 
 		lua_pushboolean(lua, TRUE);
 		return 1;
+	    }
 	}
 	return 0;
 }
@@ -2353,6 +2359,7 @@ int c_xy(lua_State *lua)
 	switch (top)
 	{
 	case 0:
+	{
 		// return the xy coordinates of the window
 
 		WnckWindow *window = get_current_window();
@@ -2368,7 +2375,9 @@ int c_xy(lua_State *lua)
 			return 2;
 		}
 		break;
+	}
 	case 2:
+	{
 		// set the coordinates of the window
 
 		int type1 = lua_type(lua, 1);
@@ -2397,6 +2406,7 @@ int c_xy(lua_State *lua)
 			}
 		}
 		break;
+	    }
 	}
 	return 0;
 }
@@ -2415,54 +2425,58 @@ int c_xywh(lua_State *lua)
 
 	switch (top)
 	{
-	case 0:
-		// Return the xywh settings of the window
+	    case 0:
+	    {
+		    // Return the xywh settings of the window
 
-		WnckWindow *window = get_current_window();
-		if (window) {
+		    WnckWindow *window = get_current_window();
+		    if (window) {
 
-			int x, y, width, height;
+			    int x, y, width, height;
 
-			wnck_window_get_geometry(window, &x, &y, &width, &height);
+			    wnck_window_get_geometry(window, &x, &y, &width, &height);
 
-			lua_pushinteger(lua, x);
-			lua_pushinteger(lua, y);
-			lua_pushinteger(lua, width);
-			lua_pushinteger(lua, height);
+			    lua_pushinteger(lua, x);
+			    lua_pushinteger(lua, y);
+			    lua_pushinteger(lua, width);
+			    lua_pushinteger(lua, height);
 
-			return 4;
+			    return 4;
+		    }
+		    break;
+	    }	
+	    case 4:
+	    {
+		    // Set the xywh settings in the window
+
+
+		    int type1 = lua_type(lua, 1);
+		    int type2 = lua_type(lua, 2);
+		    int type3 = lua_type(lua, 3);
+		    int type4 = lua_type(lua, 4);
+
+		    if ((type1 != LUA_TNUMBER) ||
+			    (type2 != LUA_TNUMBER) ||
+			    (type3 != LUA_TNUMBER) ||
+			    (type4 != LUA_TNUMBER)) {
+			    luaL_error(lua, "xywh: %s", number_expected_as_indata_error);
+			    return 0;
+		    }
+
+		    int x = lua_tonumber(lua, 1);
+		    int y = lua_tonumber(lua, 2);
+		    int xsize = lua_tonumber(lua, 3);
+		    int ysize = lua_tonumber(lua, 4);
+
+		    if (!devilspie2_emulate) {
+			    WnckWindow *window = get_current_window();
+			    if (window) {
+				    set_window_geometry(window, x, y, xsize, ysize, adjusting_for_decoration);
+			    }
+		    }
+
+		    return 0;
 		}
-		break;
-	case 4:
-		// Set the xywh settings in the window
-
-
-		int type1 = lua_type(lua, 1);
-		int type2 = lua_type(lua, 2);
-		int type3 = lua_type(lua, 3);
-		int type4 = lua_type(lua, 4);
-
-		if ((type1 != LUA_TNUMBER) ||
-		        (type2 != LUA_TNUMBER) ||
-		        (type3 != LUA_TNUMBER) ||
-		        (type4 != LUA_TNUMBER)) {
-			luaL_error(lua, "xywh: %s", number_expected_as_indata_error);
-			return 0;
-		}
-
-		int x = lua_tonumber(lua, 1);
-		int y = lua_tonumber(lua, 2);
-		int xsize = lua_tonumber(lua, 3);
-		int ysize = lua_tonumber(lua, 4);
-
-		if (!devilspie2_emulate) {
-			WnckWindow *window = get_current_window();
-			if (window) {
-				set_window_geometry(window, x, y, xsize, ysize, adjusting_for_decoration);
-			}
-		}
-
-		return 0;
 	}
 	return 0;
 }

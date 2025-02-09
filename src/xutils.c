@@ -24,6 +24,7 @@
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 // FIXME: retrieve screen position via wnck
 #include <X11/extensions/Xinerama.h>

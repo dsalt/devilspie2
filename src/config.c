@@ -194,8 +194,6 @@ int load_config(gchar *filename)
 		return -1;
 	}
 
-	int total_number_of_files = 0;
-
 	config_lua_state = init_script();
 
 	if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
@@ -235,7 +233,6 @@ int load_config(gchar *filename)
 				temp_window_open_file_list =
 				    add_lua_file_to_list(temp_window_open_file_list, temp_filename);
 			}
-			total_number_of_files++;
 		}
 
 		g_free(temp_filename);
