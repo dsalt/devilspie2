@@ -1,4 +1,4 @@
-Copyright © 2011-2024 devilspie2 developers
+Copyright © 2011-2025 devilspie2 developers
 
 This file is distributed under the same licence as the devilspie2 package
 (see [COPYING](COPYING)).
@@ -10,7 +10,7 @@ It will read Lua scripts from a folder and run them whenever a window is
 opened, and the rules in them are applied on the window. (See the
 [Configuration section](#configuration) for more details.)
 
-Unfortunately the rules of the original Devil's Pie are not supported.
+Unfortunately, the rules of the original Devil's Pie are not supported.
 
 `devilspie2` will load all the Lua files in this folder in alphabetical order.
 
@@ -73,7 +73,7 @@ scripts_window_close = {
 With this, both `file1.lua` and `file2.lua` will be called whenever a window
 is closed.
 
-As of v0.46, each script has 5 seconds to do its job ane exit or it will be
+As of v0.46, each script has 5 seconds to do its job and exit or it will be
 unceremoniously interrupted.
 
 ## Scripting
@@ -86,8 +86,8 @@ The scripting language used is [Lua](https://www.lua.org/).
 Tips:
 
 * If you're going to be testing certain window properties a lot, it's best to
-  assign those property values to variables then to test the variables.
-* String comparison is case sensitive.  Comparing `SomeProgram` with
+  assign those property values to variables and then test against these.
+* String comparison is case-sensitive.  Comparing `SomeProgram` with
   `someprogram` will not report equality.
 
 
@@ -245,7 +245,7 @@ information:
   <a name="user-content-window-property-is-utf8" />
 
   Returns whether the named window property is UTF-8.
-  (Always returns `true` for properties which are converted to string.)
+  (Always returns `true` for properties which are converted to string)
 
   Returns `nil` if the property doesn't exist.
 
@@ -271,7 +271,7 @@ information:
 * `get_window_xid()`
   <a name="user-content-get-window-xid" />
 
-  Returns the X window id of the current window.
+  Returns the X window ID of the current window.
 
 * `get_window_class()`
   <a name="user-content-get-window-class" />
@@ -320,7 +320,7 @@ information:
 
 ### Setters
 
-And the rest of the commands are used to modify the properties of the windows:
+The rest of the commands are used to modify the properties of the windows:
 
 * `set_adjust_for_decoration([bool])`
   <a name="user-content-set-adjust-for-decoration" />
@@ -531,7 +531,7 @@ And the rest of the commands are used to modify the properties of the windows:
 * `unstick_window()`
   <a name="user-content-unstick-window" />
 
-  Ask the window manager not to have window's position fixed on the screen
+  Ask the window manager not to have the window's position fixed on the screen
   when the workspace or viewport scrolls.
 
 * `set_skip_tasklist(bool skip)`
@@ -698,7 +698,7 @@ And the rest of the commands are used to modify the properties of the windows:
 
   With parameters, set the position and size of a window.
 
-  Without, returns the position and size of a window.
+  When no parameters are passed, returns the position and size of a window.
 
 ### Utilities
 
@@ -832,3 +832,4 @@ See [AUTHORS](AUTHORS).
 * See also: https://github.com/dsalt/devilspie
 
 * IRC: irc://irc.libera.chat/#devilspie2
+

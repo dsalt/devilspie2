@@ -1,6 +1,6 @@
 /**
  *	This file is part of devilspie2
- *	Copyright (C) 2021 Darren Salt
+ *	Copyright (C) 2025 Darren Salt
  *
  *	devilspie2 is free software: you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License as published
