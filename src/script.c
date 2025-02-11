@@ -1,7 +1,7 @@
 /**
  *	This file is part of devilspie2
  *	Copyright (C) 2011-2019 Andreas Rönnquist
- *	Copyright (C) 2019-2021 Darren Salt
+ *	Copyright (C) 2019-2025 Darren Salt
  *
  *	devilspie2 is free software: you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License as published
@@ -201,6 +201,8 @@ register_cfunctions(lua_State *lua)
 	DP2_REGISTER(lua, on_geometry_changed);
 
 	DP2_REGISTER(lua, get_process_name);
+
+	DP2_REGISTER(lua, get_process_owner);
 
 	DP2_REGISTER(lua, millisleep);
 }

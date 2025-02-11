@@ -16,6 +16,7 @@ libglib2.0-dev
 liblua5.3-0-dev
 libwnck-3-dev
 libgtk-3-dev
+gettext
 libxrandr-dev (optional)
 
 On a system still using Gtk version 2, replace the wnck and gtk libs with:

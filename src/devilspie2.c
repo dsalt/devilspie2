@@ -372,33 +372,6 @@ int main(int argc, char *argv[])
 		printf("\n");
 		exit(EXIT_FAILURE);
 	}
-
-	gdk_init(&argc, &argv);
-
-	g_free(full_desc_string);
-	g_free(devilspie2_description);
-
-	// if the folder is NULL, default to ~/.config/devilspie2/
-	if (script_folder == NULL) {
-
-		temp_folder = g_build_path(G_DIR_SEPARATOR_S,
-		                           g_get_user_config_dir(),
-		                           "devilspie2",
-		                           NULL);
-
-		// check if the folder does exist
-		if (!g_file_test(temp_folder, G_FILE_TEST_IS_DIR)) {
-
-			// - and if it doesn't, create it.
-			if (g_mkdir(temp_folder, 0700) != 0) {
-				printf("%s\n", _("Couldn't create the default folder for devilspie2 scripts."));
-				exit(EXIT_FAILURE);
-			}
-		}
-
-		script_folder = temp_folder;
-	}
-
 	gboolean shown = FALSE;
 	if (show_version) {
 		printf("Devilspie2 v%s\n", DEVILSPIE2_VERSION);
@@ -429,6 +402,33 @@ int main(int argc, char *argv[])
 	}
 	if (shown)
 		exit(0);
+
+	gdk_init(&argc, &argv);
+
+	g_free(full_desc_string);
+	g_free(devilspie2_description);
+
+	// if the folder is NULL, default to ~/.config/devilspie2/
+	if (script_folder == NULL) {
+
+		temp_folder = g_build_path(G_DIR_SEPARATOR_S,
+		                           g_get_user_config_dir(),
+		                           "devilspie2",
+		                           NULL);
+
+		// check if the folder does exist
+		if (!g_file_test(temp_folder, G_FILE_TEST_IS_DIR)) {
+
+			// - and if it doesn't, create it.
+			if (g_mkdir(temp_folder, 0700) != 0) {
+				printf("%s\n", _("Couldn't create the default folder for devilspie2 scripts."));
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		script_folder = temp_folder;
+	}
+
 
 #if (GTK_MAJOR_VERSION >= 3)
 	if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {

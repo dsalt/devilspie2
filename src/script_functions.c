@@ -1,7 +1,7 @@
 /**
  *	This file is part of devilspie2
  *	Copyright (C) 2011-2019 Andreas Rönnquist
- *	Copyright (C) 2019-2021 Darren Salt
+ *	Copyright (C) 2019-2025 Darren Salt
  *
  *	devilspie2 is free software: you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License as published
@@ -22,6 +22,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <pwd.h>
+#include <grp.h>
+#include <sys/stat.h>
 
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <libwnck/libwnck.h>
@@ -1746,7 +1749,9 @@ int c_set_window_property(lua_State *lua)
 
 	switch (type) {
 	case LUA_TSTRING:
+	{
 		gboolean use_utf8 = default_use_utf8;
+	    
 		if (top > 2) {
 			type = lua_type(lua, 3);
 			if (type != LUA_TBOOLEAN) {
@@ -1759,7 +1764,7 @@ int c_set_window_property(lua_State *lua)
 			my_wnck_set_string_property(wnck_window_get_xid(window), my_wnck_atom_get(property),
 						    lua_tostring(lua, 2), use_utf8);
 		break;
-
+	}
 	case LUA_TNUMBER:
 		if (!devilspie2_emulate && window)
 			my_wnck_set_cardinal_property(wnck_window_get_xid(window), my_wnck_atom_get(property),
@@ -1929,6 +1934,7 @@ int c_set_viewport(lua_State *lua)
 	switch (top)
 	{
 	case 1:
+	{
 		WnckScreen *screen;
 		int x;
 		int type = lua_type(lua, 1);
@@ -1982,7 +1988,9 @@ int c_set_viewport(lua_State *lua)
 
 		lua_pushboolean(lua, TRUE);
 		return 1;
+	}
 	case 2:
+	{
 		int type1 = lua_type(lua, 1);
 		int type2 = lua_type(lua, 2);
 
@@ -2032,6 +2040,7 @@ int c_set_viewport(lua_State *lua)
 
 		lua_pushboolean(lua, TRUE);
 		return 1;
+	    }
 	}
 	return 0;
 }
@@ -2353,6 +2362,7 @@ int c_xy(lua_State *lua)
 	switch (top)
 	{
 	case 0:
+	{
 		// return the xy coordinates of the window
 
 		WnckWindow *window = get_current_window();
@@ -2368,7 +2378,9 @@ int c_xy(lua_State *lua)
 			return 2;
 		}
 		break;
+	}
 	case 2:
+	{
 		// set the coordinates of the window
 
 		int type1 = lua_type(lua, 1);
@@ -2397,6 +2409,7 @@ int c_xy(lua_State *lua)
 			}
 		}
 		break;
+	    }
 	}
 	return 0;
 }
@@ -2415,54 +2428,58 @@ int c_xywh(lua_State *lua)
 
 	switch (top)
 	{
-	case 0:
-		// Return the xywh settings of the window
+	    case 0:
+	    {
+		    // Return the xywh settings of the window
 
-		WnckWindow *window = get_current_window();
-		if (window) {
+		    WnckWindow *window = get_current_window();
+		    if (window) {
 
-			int x, y, width, height;
+			    int x, y, width, height;
 
-			wnck_window_get_geometry(window, &x, &y, &width, &height);
+			    wnck_window_get_geometry(window, &x, &y, &width, &height);
 
-			lua_pushinteger(lua, x);
-			lua_pushinteger(lua, y);
-			lua_pushinteger(lua, width);
-			lua_pushinteger(lua, height);
+			    lua_pushinteger(lua, x);
+			    lua_pushinteger(lua, y);
+			    lua_pushinteger(lua, width);
+			    lua_pushinteger(lua, height);
 
-			return 4;
+			    return 4;
+		    }
+		    break;
+	    }	
+	    case 4:
+	    {
+		    // Set the xywh settings in the window
+
+
+		    int type1 = lua_type(lua, 1);
+		    int type2 = lua_type(lua, 2);
+		    int type3 = lua_type(lua, 3);
+		    int type4 = lua_type(lua, 4);
+
+		    if ((type1 != LUA_TNUMBER) ||
+			    (type2 != LUA_TNUMBER) ||
+			    (type3 != LUA_TNUMBER) ||
+			    (type4 != LUA_TNUMBER)) {
+			    luaL_error(lua, "xywh: %s", number_expected_as_indata_error);
+			    return 0;
+		    }
+
+		    int x = lua_tonumber(lua, 1);
+		    int y = lua_tonumber(lua, 2);
+		    int xsize = lua_tonumber(lua, 3);
+		    int ysize = lua_tonumber(lua, 4);
+
+		    if (!devilspie2_emulate) {
+			    WnckWindow *window = get_current_window();
+			    if (window) {
+				    set_window_geometry(window, x, y, xsize, ysize, adjusting_for_decoration);
+			    }
+		    }
+
+		    return 0;
 		}
-		break;
-	case 4:
-		// Set the xywh settings in the window
-
-
-		int type1 = lua_type(lua, 1);
-		int type2 = lua_type(lua, 2);
-		int type3 = lua_type(lua, 3);
-		int type4 = lua_type(lua, 4);
-
-		if ((type1 != LUA_TNUMBER) ||
-		        (type2 != LUA_TNUMBER) ||
-		        (type3 != LUA_TNUMBER) ||
-		        (type4 != LUA_TNUMBER)) {
-			luaL_error(lua, "xywh: %s", number_expected_as_indata_error);
-			return 0;
-		}
-
-		int x = lua_tonumber(lua, 1);
-		int y = lua_tonumber(lua, 2);
-		int xsize = lua_tonumber(lua, 3);
-		int ysize = lua_tonumber(lua, 4);
-
-		if (!devilspie2_emulate) {
-			WnckWindow *window = get_current_window();
-			if (window) {
-				set_window_geometry(window, x, y, xsize, ysize, adjusting_for_decoration);
-			}
-		}
-
-		return 0;
 	}
 	return 0;
 }
@@ -2523,6 +2540,7 @@ int c_on_geometry_changed(lua_State *lua)
  */
 static ATTR_MALLOC gchar *c_get_process_name_INT_proc(lua_State *, pid_t);
 static ATTR_MALLOC gchar *c_get_process_name_INT_ps(lua_State *, pid_t);
+static ATTR_MALLOC gchar *c_get_process_owner_INT_proc(lua_State *, pid_t);
 
 int c_get_process_name(lua_State *lua)
 {
@@ -2607,6 +2625,47 @@ static gchar *c_get_process_name_INT_ps(lua_State *lua, pid_t pid)
 	pclose(cmdfp);
 	return g_strdup(cmdname);
 }
+
+int c_get_process_owner(lua_State *lua)
+{
+	if (!check_param_count(lua, "get_process_owner", 0)) {
+                return 0;
+        }
+
+
+	WnckWindow *window = get_current_window();
+
+	if (window) {
+		pid_t pid = wnck_window_get_pid(window);
+
+		if (pid != 0) {
+			gchar *ownername = c_get_process_owner_INT_proc(lua, pid);
+			lua_pushstring(lua, ownername ? ownername : "");
+			g_free(ownername);
+			return 1;
+		}
+	}
+
+	lua_pushstring(lua, "");
+	return 1;
+}
+
+static gchar *c_get_process_owner_INT_proc(lua_State *lua, pid_t pid)
+{
+	char proc_comm_file[1024];
+	snprintf(proc_comm_file, sizeof(proc_comm_file), "/proc/%lu/comm", (unsigned long)pid);
+	struct stat info;
+	if (stat(proc_comm_file, &info) < 0){
+	    perror("stat");
+	    return NULL;
+	}
+	struct passwd *pw = getpwuid(info.st_uid);
+	if (pw != NULL){
+	    return g_strdup(pw->pw_name);
+	}
+	return NULL;
+}
+
 
 
 /**
