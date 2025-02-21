@@ -13,6 +13,7 @@ jobs:
     env:
       PREFIX: /usr/local/bin
       CC: ${{ matrix.compiler }}
+      LUA: lua${{ matrix.luaver }}
 
     steps:
       - uses: actions/checkout@v3
@@ -22,18 +23,17 @@ jobs:
           sudo apt-get install -y \
             pkg-config \
             libglib2.0-dev \
-            liblua${{ matrix.luaver }}-dev \
+            lib$LUA-dev \
             libwnck-3-dev \
             libgtk-3-dev \
             libxrandr-dev \
             build-essential \
             gettext \
-            gcc-12 \
-            gcc-13
+            $CC
       - name: CC ver
         run: ${CC} -v
       - name: make
-        run: make LUA=lua${{ matrix.luaver }}
+        run: make
       - name: make install
         run: sudo make install
       - name: ldd
