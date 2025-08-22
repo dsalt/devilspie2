@@ -79,7 +79,7 @@ unceremoniously interrupted.
 ## Scripting
 
 The scripting language used is [Lua](https://www.lua.org/).
-* FAQ:           https://www.lua.org/FAQ.html
+* FAQ:           https://www.lua.org/faq.html
 * Documentation: https://www.lua.org/docs.html
 * Tutorials:     http://lua-users.org/wiki/TutorialDirectory
 
