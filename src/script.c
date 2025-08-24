@@ -68,7 +68,7 @@ void configureLuaPaths(lua_State *lua, gchar * script_folder)
 	gchar buff[maxlen];
 	if ( maxlen >= g_snprintf(buff, maxlen, PACKAGE_CMD, file, mod) )
 	{
-		luaL_dostring(lua, buff );
+		(void)luaL_dostring(lua, buff);
 	}
 	g_free(file);
 	g_free(mod);
