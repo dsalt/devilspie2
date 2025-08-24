@@ -292,43 +292,97 @@ void refresh_config_and_script()
 /**
  *
  */
+#ifdef FILENAME_MAX
+# define PATHLEN (FILENAME_MAX)
+#elif defined(PATH_MAX)
+# define PATHLEN (PATH_MAX)
+#else
+# define PATHLEN 4096
+#endif
+static struct {
+	guint ref;
+	gboolean refresh; // true if devilspie2.lua is changed or if a file is created or deleted
+	char *short_filename; // NULL to force full refresh
+	char full_path[PATHLEN];
+} folder_changed_data;
+
+static void folder_changed_callback_idle(gpointer user_data)
+{
+printf("callback: refresh=%s name=%s short=%s\n", folder_changed_data.refresh?"TRUE ":"FALSE", folder_changed_data.full_path, folder_changed_data.short_filename);
+	if (folder_changed_data.refresh || !folder_changed_data.short_filename)
+	{
+		refresh_config_and_script();
+	}
+	else if( g_str_has_suffix((gchar*)folder_changed_data.short_filename, ".lua") && is_in_any_list(folder_changed_data.full_path) == FALSE)
+	{	// May be a module file 
+puts("lua, in list");
+		gchar * module_name = g_utf8_substring(folder_changed_data.short_filename, 0, strlen(folder_changed_data.short_filename) - 4);
+		if(is_module_loaded(global_lua_state, module_name) == TRUE)
+		{
+			global_lua_state = reinit_script(global_lua_state, script_folder);
+puts("reinit");
+		}
+		g_free(module_name);
+	}
+	if (!user_data)
+		folder_changed_data.ref = 0;
+}
+
 void folder_changed_callback(GFileMonitor *mon G_GNUC_UNUSED,
                              GFile *first_file,
                              GFile *second_file G_GNUC_UNUSED,
                              GFileMonitorEvent event,
                              gpointer user_data)
 {
+	if (!folder_changed_data.ref) {
+		// reset if the callback isn't registered
+		folder_changed_data.refresh = FALSE;
+		folder_changed_data.short_filename = NULL;
+		folder_changed_data.full_path[0] = 0;
+	}
+
 	// If a file is created or deleted, we need to check the file lists again
 	if ((event == G_FILE_MONITOR_EVENT_CREATED) ||
 	    (event == G_FILE_MONITOR_EVENT_DELETED))
 	{
-		refresh_config_and_script();
+		// created or deleted
+		folder_changed_data.refresh = TRUE;
+		folder_changed_data.short_filename = NULL;
+
+		goto add_callback;
 	}
 
 	// Also monitor if our devilspie2.lua file is changed - since it handles
 	// which files are window close or window open scripts.
-	if (event == G_FILE_MONITOR_EVENT_CHANGED) {
-		if (first_file) {
-			gchar *short_filename = g_file_get_basename(first_file);
-			gchar *full_path = g_file_get_path(first_file);
+	if (event == G_FILE_MONITOR_EVENT_CHANGED && first_file && !folder_changed_data.refresh)
+	{
+		// assumption: short_filename is trailing substr of full_path
+		gchar *short_filename = g_file_get_basename(first_file);
+		gchar *full_path = g_file_get_path(first_file);
 
-			if (g_strcmp0(short_filename, "devilspie2.lua")==0)
-			{
-				refresh_config_and_script();
-			}
-			else if( g_str_has_suffix((gchar*)short_filename, ".lua") && is_in_any_list(full_path) == FALSE)
-			{	// May be a module file 
-				gchar * module_name = g_utf8_substring(short_filename, 0, strlen(short_filename) - 4);
-				if(is_module_loaded(global_lua_state, module_name) == TRUE)
-				{
-					global_lua_state = reinit_script(global_lua_state, script_folder);
-				}
-				g_free(module_name);
-			}
-			g_free(short_filename);
-			g_free(full_path);
+		if (g_strcmp0(short_filename, "devilspie2.lua") == 0)
+			folder_changed_data.refresh = TRUE;
+		// paths differ? process the previous one now
+		else if (folder_changed_data.short_filename && g_strcmp0(full_path, folder_changed_data.full_path))
+		{
+			folder_changed_callback_idle(&folder_changed_data); // non-NULL is all that's needed
 		}
+
+		folder_changed_data.short_filename = folder_changed_data.full_path + strlen(full_path) - strlen(short_filename);
+		strncpy(folder_changed_data.full_path, full_path, PATHLEN - 1);
+		folder_changed_data.full_path[PATHLEN - 1] = 0;
+
+		g_free(short_filename);
+		g_free(full_path);
+
+		goto add_callback;
 	}
+	// not an event in which we're interested; return without adding the callback
+	return;
+
+add_callback: // add the callback
+	if (!folder_changed_data.ref)
+		folder_changed_data.ref = g_idle_add_once(folder_changed_callback_idle, NULL);
 }
 
 /**
