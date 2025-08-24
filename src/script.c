@@ -35,6 +35,7 @@
 #include "compat.h"
 #include "intl.h"
 #include "script.h"
+#include "logger.h"
 
 #if (GTK_MAJOR_VERSION >= 3)
 #define HAVE_GTK3
@@ -332,7 +333,7 @@ run_script(lua_State *lua, const char *filename)
 
 	if (result) {
 		// We got an error, print it
-		printf(_("Error: %s\n"), lua_tostring(lua, -1));
+		logger_err_printf(_("Error: %s\n"), lua_tostring(lua, -1));
 		lua_remove(lua, errpos); // unstack the error handler
 		lua_pop(lua, 1);
 		return -1;
@@ -359,7 +360,7 @@ run_script(lua_State *lua, const char *filename)
 
 	if (s) {
 		// no info to add here; just output the error
-		printf(_("Error: %s\n"), lua_tostring(lua, -1));
+		logger_err_printf(_("Error: %s\n"), lua_tostring(lua, -1));
 		lua_pop(lua, 1); // else we leak it
 	}
 

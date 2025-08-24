@@ -1,6 +1,6 @@
 /**
  *	This file is part of devilspie2
- *	Copyright (C) 2021 Darren Salt
+ *	Copyright (C) 2024 Darren Salt
  *
  *	devilspie2 is free software: you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License as published
@@ -17,15 +17,19 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HEADER_COMPAT_
-#define __HEADER_COMPAT_
+#ifndef __HEADER_LOGGER_
+#define __HEADER_LOGGER_
 
-#if defined(__GNUC__) || defined(__clang__)
-# define ATTR_MALLOC __attribute__((malloc))
-# define ATTR_FORMAT_PRINTF(fmt, args) __attribute__((format(printf, fmt, args)))
-#else
-# define ATTR_MALLOC
-# define ATTR_FORMAT_PRINTF(fmt, args)
+#include <lua.h>
+#include "compat.h"
+
+int logger_create(lua_State *);
+char *logger_get_fifo_name(void);
+void logger_print(const char *text);
+void logger_print_always(const char *text);
+void logger_printf(const char *format, ...) ATTR_FORMAT_PRINTF(1, 2);
+void logger_err_print(const char *text);
+void logger_err_printf(const char *format, ...) ATTR_FORMAT_PRINTF(1, 2);
+void logger_shutdown(void);
+
 #endif
-
-#endif /* __HEADER_COMPAT_ */

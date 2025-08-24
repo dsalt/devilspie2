@@ -33,6 +33,7 @@
 
 #include "script.h"
 #include "script_functions.h"
+#include "logger.h"
 
 #include "config.h"
 
@@ -221,7 +222,7 @@ int load_config(gchar *filename)
 	if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
 
 		if (run_script(config_lua_state, filename) != 0) {
-			printf(_("Error: %s\n"), filename);
+			logger_err_printf(_("Error: %s\n"), filename);
 			result = -1;
 			goto EXITPOINT;
 		}

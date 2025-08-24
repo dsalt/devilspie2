@@ -59,7 +59,9 @@
 
 #include "error_strings.h"
 
-#define DEPRECATED() fprintf(stderr, "warning: deprecated function %s called\n", __func__ + 2);
+#include "logger.h"
+
+#define DEPRECATED() logger_err_printf("warning: deprecated function %s called\n", __func__ + 2);
 
 /**
  *
@@ -712,16 +714,16 @@ int c_debug_print(lua_State *lua)
 		const char *s = lua_tostring(lua, -1);  /* get result */
 		if (s == NULL)
 			return luaL_error(lua, "'tostring' must return a string to 'print'");
-		if (i > 1) {
-			if (devilspie2_debug) fputs("\t", stdout);
-		}
-		if (devilspie2_debug) fputs(s, stdout);
+
+		if (i > 1)
+			logger_printf("\t%s", s);
+		else
+			logger_print(s);
+
 		lua_pop(lua, 1);  /* pop result */
 	}
-	if (devilspie2_debug) {
-		fputs("\n", stdout);
-		fflush(stdout);
-	}
+	logger_print("\n");
+	fflush(stdout);
 
 	return 0;
 }
