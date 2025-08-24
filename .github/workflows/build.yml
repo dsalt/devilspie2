@@ -1,0 +1,46 @@
+---
+name: Build CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc-12, gcc-13]
+        luaver: [5.2, 5.3, 5.4]
+    env:
+      PREFIX: /usr/local/bin
+      CC: ${{ matrix.compiler }}
+      LUA: lua${{ matrix.luaver }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            pkg-config \
+            libglib2.0-dev \
+            lib$LUA-dev \
+            libwnck-3-dev \
+            libgtk-3-dev \
+            libxrandr-dev \
+            build-essential \
+            gettext \
+            $CC
+      - name: CC ver
+        run: ${CC} -v
+      - name: make
+        run: make
+      - name: make install
+        run: sudo make install
+      - name: ldd
+        run: ldd $PREFIX/devilspie2
+      - name: check version
+        run: $PREFIX/devilspie2 -v
+      - name: check libwnck version
+        run: $PREFIX/devilspie2 -w
+      - name: check Lua version
+        run: test "$($PREFIX/devilspie2 -l)" = "Lua ${{ matrix.luaver }}"

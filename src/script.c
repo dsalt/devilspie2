@@ -53,15 +53,39 @@ gboolean devilspie2_emulate = FALSE;
 lua_State *global_lua_state = NULL;
 
 /**
+As the script folder is configurable and doesn't _have_ to be the working directory, Lua's default search path
+(package.path) for "require"s won't help much (as it uses "./?.lua" and "./?/init.lua").
+This function adds <script_folder>/?.lua and <script_folder>/?/init.lua to enable the use of "requires" in scripts.
+ */
+void configureLuaPaths(lua_State *lua, gchar * script_folder)
+{
+	const char PACKAGE_CMD[] = "package.path = package.path .. ';%s;%s'";
+	const uint NUM_SEPS = 3;
+
+	gchar * file = g_build_filename(script_folder, "?.lua", NULL);
+	gchar * mod = g_build_filename(script_folder, "?", "init.lua", NULL);
+	gulong maxlen = strlen(file) + strlen(mod) + sizeof(PACKAGE_CMD) + (NUM_SEPS * 3);
+	gchar buff[maxlen];
+	if ( maxlen >= g_snprintf(buff, maxlen, PACKAGE_CMD, file, mod) )
+	{
+		luaL_dostring(lua, buff );
+	}
+	g_free(file);
+	g_free(mod);
+}
+
+/**
  *
  */
 lua_State *
-init_script()
+init_script(gchar * script_folder)
 {
 	lua_State *lua = luaL_newstate();
 	luaL_openlibs(lua);
 
 	register_cfunctions(lua);
+
+	configureLuaPaths(lua, script_folder);
 
 	return lua;
 }
@@ -112,9 +136,12 @@ register_cfunctions(lua_State *lua)
 	DP2_REGISTER(lua, decorate_window);
 	DP2_REGISTER(lua, undecorate_window);
 
+	DP2_REGISTER(lua, get_window_workspace);
 	DP2_REGISTER(lua, set_window_workspace);
 	DP2_REGISTER(lua, change_workspace);
 	DP2_REGISTER(lua, get_workspace_count);
+	DP2_REGISTER(lua, get_active_workspace);
+	DP2_REGISTER(lua, get_workspaces);
 
 	DP2_REGISTER(lua, pin_window);
 	DP2_REGISTER(lua, unpin_window);
@@ -132,6 +159,8 @@ register_cfunctions(lua_State *lua)
 	DP2_REGISTER(lua, set_skip_tasklist);
 	DP2_REGISTER(lua, set_skip_pager);
 
+	DP2_REGISTER(lua, get_window_is_minimized);
+	lua_register(lua, "get_window_is_minimised", c_get_window_is_minimized);
 	DP2_REGISTER(lua, get_window_is_maximized);
 	lua_register(lua, "get_window_is_maximised", c_get_window_is_maximized);
 
@@ -350,3 +379,36 @@ done_script(lua_State *lua)
 	//lua=NULL;
 }
 
+lua_State * reinit_script(lua_State *lua, gchar * script_folder)
+{
+	done_script(lua);
+	return init_script(script_folder);
+}
+
+/**
+ * Given a module name, ask lua if it is a loaded module in the given Lua VM
+ */
+gboolean is_module_loaded(lua_State * lua, const gchar * module_name)
+{
+	if( lua == NULL ) return FALSE;
+
+	const char PACKAGE_CMD[] = "return package.loaded['%s']";
+
+	gulong maxlen = strlen(module_name) + sizeof(PACKAGE_CMD);
+	gchar buff[maxlen];
+	if ( maxlen >= g_snprintf(buff, maxlen, PACKAGE_CMD, module_name) )
+	{
+		if ( luaL_dostring(lua, buff ) ) {
+			return FALSE;  // Couldn't even call into Lua, something is wrong, just let things fail elsewhere
+		}
+
+		if( lua_istable(lua, -1) )  // Loaded modules will normally be a table
+		{
+			lua_pop(lua, -1);
+			return TRUE;
+		}
+		// But really simple modules that return nothing may just be a boolean value to indicate that they have been loaded
+		if( lua_isboolean(lua, -1) && lua_toboolean(lua, -1) == TRUE) return TRUE;
+	}
+	return FALSE;
+}

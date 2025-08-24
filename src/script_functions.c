@@ -781,7 +781,7 @@ int c_minimize(lua_State *lua)
 	if (!devilspie2_emulate) {
 		WnckWindow *window = get_current_window();
 
-		if (window) {
+		if (window && FALSE == wnck_window_is_minimized(window)) {
 			wnck_window_minimize(window);
 		}
 	}
@@ -802,7 +802,7 @@ int c_unminimize(lua_State *lua)
 	if (!devilspie2_emulate) {
 		WnckWindow *window = get_current_window();
 
-		if (window) {
+		if (window && TRUE == wnck_window_is_minimized(window)) {
 			wnck_window_unminimize (window, current_time());
 		}
 	}
@@ -911,6 +911,47 @@ int c_get_window_is_decorated(lua_State *lua)
 
 	return 1;
 }
+int c_get_active_workspace(lua_State *lua)
+{
+	if (!check_param_count(lua, "c_get_active_workspace", 0)) {
+		return 0;
+	}
+	WnckWindow *window = get_current_window();
+	if(window == NULL) {
+		g_printerr("No Current Window");
+		return -1;
+	}
+	WnckWorkspace * workspace = wnck_screen_get_active_workspace(wnck_window_get_screen(window));
+	if(workspace == NULL) {
+		g_printerr("No Screen for Current Window");
+		return -1;
+	}
+	
+	lua_pushinteger(lua, wnck_workspace_get_number(workspace) + 1 );
+	lua_pushstring(lua, wnck_workspace_get_name(workspace));
+
+	return 2;
+}
+
+int c_get_window_workspace(lua_State *lua)
+{
+	if (!check_param_count(lua, "c_get_window_workspace", 0)) {
+		return 0;
+	}
+	WnckWindow *window = get_current_window();
+	if(window == NULL) {
+		return -1;
+	}
+	WnckWorkspace * workspace = wnck_window_get_workspace(window);
+	if(workspace == NULL) {
+		return -1;
+	}
+	
+	lua_pushinteger(lua, wnck_workspace_get_number(workspace) + 1); // Workspace indices in Lua are 1-based
+	lua_pushstring(lua, wnck_workspace_get_name(workspace));
+
+	return 2;
+}
 
 /**
  Given a workspace name, perform a linear, case-sensitive search for
@@ -974,17 +1015,25 @@ int c_set_window_workspace(lua_State *lua)
 		default: break;
 	}
 
+	if (workspace_idx0 == -1){
+		lua_pushboolean(lua, FALSE);
+		return 1;
+	}
+
 	WnckWindow *window = get_current_window();
 
 	if (window && workspace_idx0 > -1) {
 		WnckScreen *screen = wnck_window_get_screen(window);
+		WnckWorkspace *current_ws = wnck_window_get_workspace(window);
 		WnckWorkspace *workspace = wnck_screen_get_workspace(screen, workspace_idx0);
 
 		if (!workspace) {
 			g_warning(_("Workspace number %d does not exist!"), workspace_idx0+1);
 		}
 		if (!devilspie2_emulate) {
-			wnck_window_move_to_workspace(window, workspace);
+			if(current_ws != workspace) { // Avoid a no-op
+				wnck_window_move_to_workspace(window, workspace);
+			}
 		}
 	}
 
@@ -1069,6 +1118,57 @@ int c_get_workspace_count(lua_State *lua)
 	lua_pushinteger(lua, count);
 
 	return 1;
+}
+
+/**
+ * Returns 2 tables listing all workspaces, keyed by name, keyed by Id
+ * If workspaces cannot be obtained, 2 empty tables will be returned
+ */
+int c_get_workspaces(lua_State *lua)
+{
+	WnckWindow *window = get_current_window();
+	if(window == NULL) {
+		lua_newtable(lua);
+		lua_newtable(lua);
+		return 2;
+	}
+	
+	WnckScreen *screen = wnck_window_get_screen(window);
+	if(screen == NULL) {
+		lua_newtable(lua);
+		lua_newtable(lua);
+		return 2;
+	}
+
+	GList * workspaces = wnck_screen_get_workspaces(screen);
+	GList * workspaces_id = workspaces;
+
+	// Keyed on name
+	lua_newtable(lua);
+	while (workspaces) {
+		WnckWorkspace *workspace = workspaces->data;
+		const char * name = wnck_workspace_get_name(workspace);
+		int id = wnck_workspace_get_number(workspace) + 1;
+		lua_pushinteger(lua, id);
+		lua_setfield(lua, -2, name);
+		
+		workspaces = workspaces->next;
+	}
+
+	// Keyed on ID 
+	lua_newtable(lua);
+	workspaces = workspaces_id;
+	while (workspaces) {
+		WnckWorkspace *workspace = workspaces->data;
+		const char * name = wnck_workspace_get_name(workspace);
+		int id = wnck_workspace_get_number(workspace) + 1;
+		lua_pushstring(lua, name);
+		lua_rawseti(lua, -2, id);
+
+		workspaces = workspaces->next;
+	}
+
+	return 2;
 }
 
 
@@ -1406,6 +1506,19 @@ int c_set_skip_pager(lua_State *lua)
 	return 0;
 }
 
+int c_get_window_is_minimized(lua_State *lua)
+{
+	if (!check_param_count(lua, "get_window_is_minimized", 0)) {
+		return 0;
+	}
+
+	WnckWindow *window = get_current_window();
+	gboolean is_minimized = window ? wnck_window_is_minimized(window) : FALSE;
+
+	lua_pushboolean(lua, is_minimized);
+
+	return 1;
+}
 
 /**
  *

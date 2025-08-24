@@ -17,6 +17,7 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  */
 #include <glib.h>
+#include <string.h>
 
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <libwnck/libwnck.h>
@@ -65,18 +66,38 @@ static gint filename_list_sortfunc(gconstpointer a,gconstpointer b)
 /**
  *
  */
-static GSList *add_lua_file_to_list(GSList *list, gchar *filename)
+static GSList *add_lua_file_to_list(GSList *list, const gchar *script_folder, const gchar *filename)
 {
-	gchar *temp_filename = g_strdup(filename);
+	gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,script_folder, filename, NULL);
 
-	list=g_slist_insert_sorted(list,
-	                           temp_filename,
-	                           filename_list_sortfunc);
+	list = g_slist_insert_sorted( list, added_filename, filename_list_sortfunc);
 
 	return list;
 }
 
+static gboolean get_lua_table(lua_State *luastate, gchar *table_name)
+{
+	if (luastate == NULL) return FALSE;
 
+	lua_getglobal(luastate, table_name);
+
+	if (lua_isnil(luastate, -1)) return FALSE;
+
+	return lua_istable(luastate, -1);
+}
+
+static gchar * get_single_script_name(lua_State *luastate, gchar *table_name)
+{
+	if (luastate == NULL) return NULL;
+
+	lua_getglobal(luastate, table_name);
+
+	if (lua_isnil(luastate, -1)) return NULL;
+
+	if (lua_isstring(luastate, -1) == FALSE) return NULL;
+
+	return (gchar *)lua_tostring(luastate, -1);
+}
 
 /**
  *
@@ -87,19 +108,7 @@ static GSList *get_table_of_strings(lua_State *luastate,
 {
 	GSList *list = NULL;
 
-	if (luastate) {
-
-		lua_getglobal(luastate, table_name);
-
-		// Do we have a value?
-		if (lua_isnil(luastate, -1)) {
-			goto EXITPOINT;
-		}
-
-		// Is it a table?
-		if (!lua_istable(luastate, -1)) {
-			goto EXITPOINT;
-		}
+	if (get_lua_table(luastate, table_name)) {
 
 		lua_pushnil(luastate);
 
@@ -107,19 +116,19 @@ static GSList *get_table_of_strings(lua_State *luastate,
 			if (lua_isstring(luastate, -1)) {
 				char *temp = (char *)lua_tostring(luastate, -1);
 
-				gchar *added_filename = g_build_path(G_DIR_SEPARATOR_S,
-				                                     script_folder,
-				                                     temp,
-				                                     NULL);
-
-				list = add_lua_file_to_list(list, added_filename);
+				list = add_lua_file_to_list(list, script_folder, temp);
 			}
 			lua_pop(luastate, 1);
 		}
 		lua_pop(luastate, 1);
 	}
-
-EXITPOINT:
+	else {
+		gchar * oneFileString = get_single_script_name(luastate, table_name);
+		if(oneFileString != NULL && strlen(oneFileString) > 0)
+		{
+			list = add_lua_file_to_list(list, script_folder, oneFileString);
+		}
+	}
 
 	return list;
 }
@@ -129,7 +138,7 @@ EXITPOINT:
  *  is_in_list
  * Go through _one_ list, and check if the filename is in this list
  */
-static gboolean is_in_list(GSList *list, gchar *filename)
+static gboolean is_in_list(GSList *list, const gchar *filename)
 {
 	gboolean result = FALSE;
 
@@ -156,7 +165,7 @@ static gboolean is_in_list(GSList *list, gchar *filename)
  *  is_in_any_list
  * Go through our lists, and check if the file is already in any of them
  */
-static gboolean is_in_any_list(gchar *filename)
+gboolean is_in_any_list(const gchar *filename)
 {
 	win_event_type i;
 
@@ -168,7 +177,20 @@ static gboolean is_in_any_list(gchar *filename)
 	return FALSE;
 }
 
+/**
+ * To support the use of 'require' in user scripts, the greedy loading and assigning to the 'open'
+ * event needs to be suppressed.  'scripts_window_open' controls this suppression.
+ * If it's defined at all, the greedy loading will be suppressed.
+ * The variable can be a single file ref or multiple, or defined to be empty (table or string) 
+ */
+static gboolean should_greedy_load_scripts(lua_State *luastate)
+{
+	if(event_lists[W_OPEN] != NULL) return FALSE; // Multiple files were listed
+	if(get_lua_table(luastate, "scripts_window_open")) return FALSE; // Defined, but was an empty table
+	if(get_single_script_name(luastate, "scripts_window_open")) return FALSE; // Defined as an empty string
 
+	return TRUE;
+}
 
 /**
  *  load_config
@@ -194,9 +216,7 @@ int load_config(gchar *filename)
 		return -1;
 	}
 
-	int total_number_of_files = 0;
-
-	config_lua_state = init_script();
+	config_lua_state = init_script(script_folder);
 
 	if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
 
@@ -206,6 +226,9 @@ int load_config(gchar *filename)
 			goto EXITPOINT;
 		}
 
+		event_lists[W_OPEN] = get_table_of_strings(config_lua_state,
+		                         script_folder,
+		                         "scripts_window_open");
 		event_lists[W_CLOSE] = get_table_of_strings(config_lua_state,
 		                         script_folder,
 		                         "scripts_window_close");
@@ -220,31 +243,33 @@ int load_config(gchar *filename)
 		                         "scripts_window_name_change");
 	}
 
-	// add the files in the folder to our linked list
-	while ((current_file = g_dir_read_name(dir))) {
+	/*
+	Allow the user to specify a limited set of files, as there might be .lua files being used in
+	"require"s or some other files the user may not want to be executed.
+	*/
+	if(should_greedy_load_scripts(config_lua_state))
+	{
+		// add the files in the folder to our linked list
+		while ((current_file = g_dir_read_name(dir))) {
 
-		gchar *temp_filename = g_build_path(G_DIR_SEPARATOR_S,
-		                                    script_folder,
-		                                    current_file,
-		                                    NULL);
-
-		// we only bother with *.lua in the folder
-		// we also ignore dot files
-		if (current_file[0] != '.' && g_str_has_suffix(current_file, ".lua")) {
-			if (!is_in_any_list(temp_filename)) {
-				temp_window_open_file_list =
-				    add_lua_file_to_list(temp_window_open_file_list, temp_filename);
+			// we only bother with *.lua in the folder
+			// we also ignore dot files
+			if (current_file[0] != '.' && g_str_has_suffix(current_file, ".lua")) {
+				if (!is_in_any_list(current_file)) {
+					temp_window_open_file_list =
+						add_lua_file_to_list(temp_window_open_file_list, script_folder, current_file);
+				}
 			}
-			total_number_of_files++;
 		}
 
-		g_free(temp_filename);
+		event_lists[W_OPEN] = temp_window_open_file_list;
 	}
-
-	event_lists[W_OPEN] = temp_window_open_file_list;
 EXITPOINT:
+	g_free(script_folder);
 	if (config_lua_state)
 		done_script(config_lua_state);
+	if (dir)
+		g_dir_close(dir);
 
 	return result;
 }

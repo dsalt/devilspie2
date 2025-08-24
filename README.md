@@ -41,40 +41,59 @@ If `devilspie2` doesn't find any Lua files (`*.lua`) in the folder, it will
 stop execution. (Dot-files – those with names beginning with `.` – are
 ignored.)
 
-If there is a file named `devilspie2.lua` in this folder, it is read and
-executed first. You can choose to have all script functionality in this
-file, `devilspie2.lua`, or you can split it up into several: in particular,
-if you want actions to be taken on events other than opening a window,
-you'll need to create scripts for each event type and you'll also need to
-list which of those scripts are to be run on each event type. This is done
-via the following variables:
+As of v0.46, each script has 5 seconds to do its job and exit or it will be
+unceremoniously interrupted.
 
+### Going beyond the default behaviour
+
+If there is a file named `devilspie2.lua` in the script folder, it is read and
+executed first. You can choose to have all script functionality in this
+file or you can split it up into several.
+
+Whilst the default behaviour is to run all scripts on window open events, Devils Pie 2 also supports other window-related events (close, focus, blur, name/title change).
+
+#### Per-event actions
+
+If you want actions to be taken on particular events, you'll need to define which scripts are to be run on each event type. This is done via the following variables:
+
+* `scripts_window_open` (See [Below](#scripts_window_open))
 * `scripts_window_close`
 * `scripts_window_focus`
 * `scripts_window_blur`
 * `scripts_window_name_change`
 
-It is expected that these variables are tables containing strings. The
-files named in these tables are expected to be in the scripts folder and
-will only be called when the respective events occur.
+These variables can be:
+* A single string, naming a file to run for that event, for example:
+  ```lua
+  scripts_window_focus = "file1.lua"
+  ```
+* A Lua table, listing multiple files, for example:
+  ```lua
+  scripts_window_close = {             
+    "file1.lua",
+    "file2.lua"
+  }
+  ```
+The files named:
+* Are expected to be in the scripts folder.
+* Will only be called when the respective events occur.
+* Can be run on multiple events (as with `file1.lua` in the above examples).
 
 *All other* Lua script files in the scripts folder will be called whenever a
-window is opened.
+window is opened (unless [`scripts_window_open`](#scripts_window_open) is specified)
 
-For example:
+#### `scripts_window_open`
 
+Specifying the `scripts_window_open` variable in `devilspie2.lua` is significant for a couple of reasons:
+* It affords control over which scripts in the folder are executed, which could be useful if you want to exclude scripts for any reason, or just to be sure of what is being run.
+* It allows the `require`ing of modules _within_ the script folder.  Lua has mechanisms to avoid executing `require`d modules more than once that the default behaviour of Devils Pie 2 circumvents and renders inoperable.
+
+If you don't want to handle window open events (unlikely) but do want to be able to `require` a module within the script folder you can set `scripts_window_open` to an empty value:
 ```lua
-scripts_window_close = {
-   "file1.lua",
-   "file2.lua"
-}
+scripts_window_open = {}
+or
+scripts_window_open = ""
 ```
-
-With this, both `file1.lua` and `file2.lua` will be called whenever a window
-is closed.
-
-As of v0.46, each script has 5 seconds to do its job ane exit or it will be
-unceremoniously interrupted.
 
 ## Scripting
 
@@ -168,6 +187,13 @@ information:
   Returns the window frame extents as four numbers: left, right, top, bottom.
 
   *(Available from version 0.45.)*
+
+* `get_window_is_minimised`
+  <a name="user-content-get-window-is-minimised`
+
+  Returns `true` if the window is minimised, `false` otherwise.
+
+  *(Available from version 0.46; -`ized` from 0.46)*
 
 * `get_window_is_maximised`
   <a name="user-content-get-window-is-maximised`
@@ -284,6 +310,43 @@ information:
   Returns the number of workspaces available.
 
   *(Available from version 0.27)*
+
+* `get_workspaces()`
+  <a name="user-content-get-workspaces"></a>
+
+  Returns 2 tables listing currently known workspaces (by Name and ID).
+  i.e. For 3 workspaces "First space", "Second" & "Third and final" and IDs of 1, 2 & 3 the returned tables
+  would be:
+  ```lua
+  local by_name, by_id = get_workspaces()
+  by_name = {
+    "First space" = 1,
+    "Second" = 2,
+    "Third and final" = 3
+  }
+  by_id = {
+    "First space", "Second", "Third and final"
+  }
+  by_name["First space"] == 1
+  by_id[3] == "Third and final"
+  ```
+    
+  *(Available from version 0.46)*
+
+  * `get_active_workspace`
+  <a name="user-content-get-active-workspace" />
+
+  Returns the index and name of the active workspace
+  (Obtained via the current window's Screen)
+
+  *(Available from version 0.46)*
+
+* `get_window_workspace()`
+  <a name="user-content-get-window-workspace"/>
+
+  Returns 2 values: the index and name of the workspace the current window is on.
+
+  *(Available from version 0.46)*
 
 * `get_screen_geometry()`
   <a name="user-content-get-screen-geometry" />

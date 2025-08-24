@@ -25,6 +25,8 @@ int load_config(gchar *config_filename);
 
 void clear_file_lists();
 
+gboolean is_in_any_list(const gchar *filename);
+
 typedef enum {
 	W_OPEN,
 	W_CLOSE,
