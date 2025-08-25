@@ -348,7 +348,7 @@ information:
   *(Available from version 0.46)*
 
   * `get_active_workspace`
-  <a name="user-content-get-active-workspace" />
+  <a name="user-content-get-active-workspace"></a>
 
   Returns the index and name of the active workspace
   (Obtained via the current window's Screen)
