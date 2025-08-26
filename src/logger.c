@@ -114,7 +114,13 @@ static int logger_lua_print(lua_State *lua)
 	int top = lua_gettop(lua);
 	for (int i = 1; i <= top; ++i) {
 		ssize_t length;
-		const char *str = luaL_tolstring(lua, i, (size_t *)&length);
+		const char *str;
+#if LUA_VERSION_NUM < 503
+		lua_pushvalue(lua, i);
+		str = lua_tolstring(lua, 1, (size_t *)&length);
+#else
+		str = luaL_tolstring(lua, i, (size_t *)&length);
+#endif
 		if (length < 0) // if true, something's broken; expect a crash
 			length = SSIZE_MAX;
 		if (i > 1)
