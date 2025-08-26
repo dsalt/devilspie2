@@ -272,6 +272,7 @@ static ATTR_MALLOC gchar *error_add_backtrace(lua_State *lua, const char *msg)
 	return g_strdup(msg);
 }
 
+#ifndef _DEBUG
 static ATTR_MALLOC gchar *error_add_location(lua_State* lua, const char *msg)
 {
 	lua_Debug state;
@@ -302,6 +303,7 @@ static void check_timeout_script(lua_State *lua, lua_Debug *state)
 	g_free(msg);
 	lua_error(lua);
 }
+#endif
 
 static int script_error(lua_State *lua)
 {
@@ -340,7 +342,7 @@ run_script(lua_State *lua, const char *filename)
 	}
 
 	// Okay, loaded the script; now run it
-
+#ifndef _DEBUG
 	struct sigaction newact, oldact;
 	newact.sa_handler = timeout_script;
 	sigemptyset(&newact.sa_mask);
@@ -350,12 +352,12 @@ run_script(lua_State *lua, const char *filename)
 	lua_sethook(lua, check_timeout_script, LUA_MASKCOUNT, 1);
 	sigaction(SIGALRM, &newact, &oldact);
 	alarm(SCRIPT_TIMEOUT_SECONDS);
-
+#endif
 	int s = lua_pcall(lua, 0, LUA_MULTRET, errpos);
-
+#ifndef _DEBUG
 	alarm(0);
 	sigaction(SIGALRM, &oldact, NULL);
-
+#endif
 	lua_remove(lua, errpos); // unstack the error handler
 
 	if (s) {
