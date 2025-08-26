@@ -442,6 +442,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if (show_fifo) {
+		puts(logger_get_fifo_name());
+		exit(EXIT_SUCCESS);
+	}
+
 	gboolean shown = FALSE;
 	if (show_version) {
 		printf("Devilspie2 v%s\n", DEVILSPIE2_VERSION);
