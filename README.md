@@ -203,14 +203,14 @@ information:
   *(Available from version 0.45.)*
 
 * `get_window_is_minimised`
-  <a name="user-content-get-window-is-minimised`
+  <a name="user-content-get-window-is-minimised"></a>
 
   Returns `true` if the window is minimised, `false` otherwise.
 
   *(Available from version 0.46; -`ized` from 0.46)*
 
 * `get_window_is_maximised`
-  <a name="user-content-get-window-is-maximised`
+  <a name="user-content-get-window-is-maximised"></a>
 
   Returns `true` if the window is maximised, `false` otherwise.
 
