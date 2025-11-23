@@ -4,14 +4,14 @@
 # as the devilspie2 package, see COPYING file.
 #
 
-Devilspie2 development
-======================
+Devil's Pie 2 development
+=========================
 
 Git is used for version control for devilpsie2. If you would like to provide
 code to devilspie2, the first thing to do is to learn git.
 
 Number two to think about is if you are willing to release your code as
-GPL. Devilspie2 is released under the GPL version 3, and I will only accept
+GPL. Devil's Pie 2 is released under the GPL version 3, and I will only accept
 code under that licence.
 
 As with any C program, program execution starts in the main function - which

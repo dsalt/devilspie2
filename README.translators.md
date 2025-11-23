@@ -48,7 +48,7 @@ result statistics to `stdout`, and sends other output to `/dev/null`. (“Other
 output” is of no use if just checking for errors.)
 
 
-## Building Devilspie2 with your translation included
+## Building Devil's Pie 2 with your translation included
 
 Edit `po/Makefile` to include your translation under the `LANGUAGES`
 variable listing.

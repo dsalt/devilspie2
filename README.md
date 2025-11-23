@@ -3,9 +3,9 @@ Copyright © 2011-2024 devilspie2 developers
 This file is distributed under the same licence as the devilspie2 package
 (see [COPYING](COPYING)).
 
-# Devilspie 2
+# Devil's Pie 2
 
-Devilspie 2 is based on the excellent program Devil's Pie by Ross Burton. 
+Devil's Pie 2 is based on the excellent program Devil's Pie by Ross Burton.
 It will read Lua scripts from a folder and run them whenever a window is
 opened, and the rules in them are applied on the window. (See the
 [Configuration section](#configuration) for more details.)
@@ -64,7 +64,7 @@ If there is a file named `devilspie2.lua` in the script folder, it is read and
 executed first. You can choose to have all script functionality in this
 file or you can split it up into several.
 
-Whilst the default behaviour is to run all scripts on window open events, Devils Pie 2 also supports other window-related events (close, focus, blur, name/title change).
+Whilst the default behaviour is to run all scripts on window open events, Devil's Pie 2 also supports other window-related events (close, focus, blur, name/title change).
 
 #### Per-event actions
 
@@ -89,18 +89,18 @@ These variables can be:
   }
   ```
 The files named:
-* Are expected to be in the scripts folder.
-* Will only be called when the respective events occur.
-* Can be run on multiple events (as with `file1.lua` in the above examples).
+* are expected to be in the scripts folder;
+* will only be called when the respective events occur;
+* can be run on multiple events (as with `file1.lua` in the above examples).
 
 *All other* Lua script files in the scripts folder will be called whenever a
-window is opened (unless [`scripts_window_open`](#scripts_window_open) is specified)
+window is opened (unless [`scripts_window_open`](#scripts_window_open) is specified).
 
 #### `scripts_window_open`
 
 Specifying the `scripts_window_open` variable in `devilspie2.lua` is significant for a couple of reasons:
 * It affords control over which scripts in the folder are executed, which could be useful if you want to exclude scripts for any reason, or just to be sure of what is being run.
-* It allows the `require`ing of modules _within_ the script folder.  Lua has mechanisms to avoid executing `require`d modules more than once that the default behaviour of Devils Pie 2 circumvents and renders inoperable.
+* It allows the `require`ing of modules _within_ the script folder.  Lua has mechanisms to avoid executing `require`d modules more than once that the default behaviour of Devil's Pie 2 circumvents and renders inoperable.
 
 If you don't want to handle window open events (unlikely) but do want to be able to `require` a module within the script folder you can set `scripts_window_open` to an empty value:
 ```lua
@@ -124,7 +124,7 @@ Tips:
   `someprogram` will not report equality.
 
 
-The following commands are recognised by the Devilspie2 Lua interpreter:
+The following commands are recognised by the Devil's Pie 2 Lua interpreter:
 
 ### Debugging
 

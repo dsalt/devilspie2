@@ -8,7 +8,7 @@
 Installation:
 -------------
 
-Building Devilspie2 requires pkg-config, gtk, wnck and lua libraries. On a
+Building Devil's Pie 2 requires pkg-config, gtk, wnck and lua libraries. On a
 Debian system, installing the following packages should do it:
 
 pkg-config
@@ -56,7 +56,7 @@ DEBUG=1, you should run “make clean” first..
 they're defined.)
 
 
-To install Devilspie2 system-wide, run make install as superuser:
+To install Devil's Pie 2 system-wide, run make install as superuser:
 
 	su -c "make install"
 
