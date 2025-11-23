@@ -1,13 +1,6 @@
 bin/devilspie2
 build/
-obj/devilspie2.o
-obj/script.o
-obj/script_functions.o
-obj/xutils.o
-obj/devilspie2.o
-obj/error_strings.o
-obj/config.o
-obj/gitversion.o
+obj/
 devilspie2
 Makefile.dep
 po/*.mo
